@@ -20,7 +20,7 @@ export default function ContestTable({ page: initialPage = 1, pageSize: initialP
         const params = new URLSearchParams();
         params.set('page', String(page));
         params.set('pageSize', String(pageSize));
-        params.set('period', 'week');
+        params.set('period', 'all');
         const res = await fetch(`/api/contest/list?${params.toString()}`);
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data?.error || 'Failed');
