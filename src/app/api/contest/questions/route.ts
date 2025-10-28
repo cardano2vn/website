@@ -33,7 +33,7 @@ export async function GET() {
     const headers = values[0];
     const rows = values.slice(1);
     const randomized = shuffle(rows.slice());
-    const picked = randomized.slice(0, 10);
+    const picked = randomized.slice(0, 30);
     const out = [headers, ...picked];
 
     return NextResponse.json({ success: true, data: { values: out } });
