@@ -89,7 +89,7 @@ export default function ContestQuestions({ onBack }: { onBack?: () => void }) {
             setQuestions(parsed);
             selectionsRef.current = new Array(parsed.length).fill('');
             displayOptionsRef.current = parsed.map(q => shuffle(q.options));
-            setRemaining(parsed.length * 10); 
+            setRemaining(parsed.length * 30); 
           }
         } else {
           if (!cancelled) setQuestions([]);
