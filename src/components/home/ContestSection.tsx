@@ -22,7 +22,7 @@ export default function ContestSection() {
           <div className="md:order-2 order-1 w-full md:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden w-full">
               <div className="p-4 sm:p-5 w-full">
-                <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900 dark:text-white text-center">Bảng xếp hạng top 20</h3>
+                <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900 dark:text-white text-center">BẢNG XẾP HẠNG</h3>
                 <ContestTable />
               </div>
             </div>
