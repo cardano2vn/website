@@ -1,0 +1,13 @@
+diff --git a/node_modules/fumadocs-ui/css/preset.css b/node_modules/fumadocs-ui/css/preset.css
+index 406039e..6c3bc7e 100644
+--- a/node_modules/fumadocs-ui/css/preset.css
++++ b/node_modules/fumadocs-ui/css/preset.css
+@@ -254,7 +254,7 @@
+   }
+ }
+ 
+-@variant max-xl {
++@media (max-width: 80rem) {
+   #nd-docs-layout:has([data-toc-popover]) {
+     --fd-tocnav-height: calc(var(--spacing) * 10);
+   }
