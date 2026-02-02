@@ -154,9 +154,9 @@ export default function AboutSection() {
   }
 
   return (
-    <section className="mb-16 text-left">
-      <aside className="mx-auto my-0 flex w-full max-w-[1200px] flex-col gap-2">
-        <div className="flex w-full gap-7 max-sm:flex-col items-start">
+    <section className="mb-16 text-left overflow-hidden">
+      <aside className="mx-auto my-0 flex w-full max-w-[1200px] flex-col gap-2 overflow-hidden">
+        <div className="flex w-full gap-7 max-sm:flex-col items-start overflow-hidden min-w-0">
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -184,11 +184,11 @@ export default function AboutSection() {
               ease: "easeOut",
               delay: 0.2
             }}
-            className="z-10 flex w-[40%] flex-col items-start gap-[15px] max-md:gap-3 max-sm:w-full flex-shrink-0"
+            className="z-10 flex w-[40%] flex-col items-start gap-[15px] max-md:gap-3 max-sm:w-full flex-shrink-0 min-w-0 overflow-hidden"
           >
             <h2 className="text-left text-[25px] font-bold max-md:text-xl text-gray-900 dark:text-white">{aboutContent.title}</h2>
             <p className="mb-1 text-[20px] font-normal max-md:text-lg text-gray-700 dark:text-gray-300">{aboutContent.subtitle}</p>
-            <div className="text-left leading-[1.8] max-md:text-base text-gray-600 dark:text-gray-300 prose prose-sm max-w-none">
+            <div className="text-left leading-[1.8] max-md:text-base text-gray-600 dark:text-gray-300 prose prose-sm max-w-none overflow-hidden">
               <TipTapPreview content={aboutContent.description} />
             </div>
             <Link href={aboutContent.buttonUrl} target="_blank">

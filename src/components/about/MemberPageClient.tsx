@@ -718,7 +718,7 @@ export default function MemberPageClient() {
           <Title title="Executive Team" description="Đội ngũ nòng cốt Cardano2VN gồm những thành viên chủ chốt, trực tiếp định hướng chiến lược và phát triển dự án trên Cardano." />
         </div>
         
-        <div id="about-section" className="scroll-mt-28 md:scroll-mt-40">
+        <div id="about-section" className="scroll-mt-28 md:scroll-mt-40 overflow-hidden">
           <AboutSection />
         </div>
 
