@@ -66,11 +66,11 @@ export default function WelcomeModal({ isOpen, onClose, origin }: WelcomeModalPr
     queryKey: ['welcome-modal'],
     queryFn: async () => {
       const response = await fetch('/api/welcome-modal');
-      if (!response.ok) {
-        return null;
-      }
+      if (!response.ok) return null;
       return response.json();
-    }
+    },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -176,36 +176,23 @@ export default function WelcomeModal({ isOpen, onClose, origin }: WelcomeModalPr
     <AnimatePresence>
       {isOpen && shouldDisplayModal() && (
         <motion.div
-          initial={{
-              opacity: 0,
-              scaleX: 0,
-              filter: "blur(12px)",
-              transformOrigin: "right",
-          }}
-          animate={{
-              opacity: 1,
-              scaleX: 1,
-              filter: "blur(0px)",
-              transformOrigin: "right",
-          }}
+          initial={{ opacity: 1, scaleX: 1, filter: "blur(0px)", transformOrigin: "right" }}
+          animate={{ opacity: 1, scaleX: 1, filter: "blur(0px)", transformOrigin: "right" }}
           exit={{
               opacity: 0,
               scaleX: 0,
               filter: "blur(12px)",
               transformOrigin: "right",
           }}
-          transition={{
-              duration: 0.6,
-              ease: [0.25, 1, 0.5, 1],
-          }}
+          transition={{ duration: 0, ease: [0.25, 1, 0.5, 1] }}
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={onClose}
         >
           <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            initial={{ scale: 1, opacity: 1, y: 0 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 20 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0, ease: "easeOut" }}
             className="relative w-full max-w-4xl max-h-[95vh] overflow-y-auto transparent-scrollbar"
             onClick={(e) => e.stopPropagation()}
           >

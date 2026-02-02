@@ -28,11 +28,6 @@ export default function DrepCard({
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/90 dark:bg-gray-800/80 shadow-sm">
-      <div className="absolute inset-0 pointer-events-none [mask-image:radial-gradient(60%_50%_at_50%_0%,black,transparent)]">
-        <div className="absolute -top-24 left-1/3 h-72 w-72 rounded-full bg-indigo-500/10 blur-3xl" />
-        <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-sky-500/10 blur-2xl" />
-      </div>
-
       <div className="relative p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Our DREP: C2VN</h3>

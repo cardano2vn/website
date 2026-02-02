@@ -43,7 +43,9 @@ export function UsersPageClient() {
       const res = await fetch('/api/admin/users', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch users');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const {
@@ -58,6 +60,8 @@ export function UsersPageClient() {
     },
     refetchInterval: WEBSOCKET_CONFIG.REFETCH_INTERVAL,
     refetchIntervalInBackground: true,
+    staleTime: 1 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const users: User[] = queryData?.data || [];

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
+import { flushSync } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProjectCard from "~/components/catalyst-card";
@@ -35,11 +36,11 @@ function ProjectPageContent() {
     queryKey: ['catalyst'],
     queryFn: async () => {
       const response = await fetch('/api/catalyst');
-      if (!response.ok) {
-        throw new Error('Failed to fetch catalyst');
-      }
+      if (!response.ok) throw new Error('Failed to fetch catalyst');
       return response.json();
     },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
   
   const projects = data?.data || [];
@@ -173,8 +174,10 @@ function ProjectPageContent() {
   };
 
   const handleOpenModal = (project: any) => {
-    setSelectedProject(project);
-    setIsModalOpen(true);
+    flushSync(() => {
+      setSelectedProject(project);
+      setIsModalOpen(true);
+    });
   };
 
   const handleCloseModal = () => {
@@ -183,7 +186,7 @@ function ProjectPageContent() {
   };
   
   return (
-    <main className="relative pt-20 bg-white dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-950 dark:to-gray-900">
+    <main className="relative pt-20 bg-white dark:bg-gray-950">
       <BackgroundMotion />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-20 lg:px-8">
         <div>

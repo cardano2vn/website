@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { XIcon, UploadCloud } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Event, EventCardProps } from "~/constants/events";
@@ -29,10 +28,8 @@ export default function EventCard({ event, index, editMode, onEditClick, onUploa
 
   return (
     <>
-      <motion.div
-        whileHover={{ scale: editMode ? 1 : 1.02 }}
-        whileTap={{ scale: editMode ? 1 : 0.98 }}
-        className={`relative rounded-xl overflow-hidden shadow-lg group cursor-pointer ${className}`}
+      <div
+        className={`relative rounded-xl overflow-hidden shadow-lg group cursor-pointer min-w-0 w-full ${className}`}
       >
       <div className="relative w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
         {event.imageUrl ? (
@@ -40,7 +37,7 @@ export default function EventCard({ event, index, editMode, onEditClick, onUploa
             <img
               src={event.imageUrl}
               alt={event.title}
-              className={`object-cover w-full h-full transition-all ${editMode ? "opacity-80" : ""}`}
+              className={`object-cover w-full h-full ${editMode ? "opacity-80" : ""}`}
               onClick={handleImageClick}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
@@ -73,13 +70,13 @@ export default function EventCard({ event, index, editMode, onEditClick, onUploa
             )}
             {!editMode && (
               <>
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/85 via-black/55 to-transparent dark:from-black/70 dark:via-black/45 dark:to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-black/70 dark:bg-black/50 pointer-events-none" />
                 <div className="absolute bottom-4 left-4 right-4 text-white z-10">
                   <div className="relative group">
                     <h4 className="block max-w-full text-lg font-semibold truncate text-white drop-shadow-xl mb-1">
                       {event.title.length > maxChars ? event.title.slice(0, maxChars) + "..." : event.title}
                     </h4>
-                    <div className="absolute left-0 -top-9 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    <div className="absolute left-0 -top-9 opacity-0 group-hover:opacity-100 pointer-events-none">
                       <div className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-pre-line max-w-[80vw] md:max-w-md relative">
                         {event.title}
                         <div className="absolute left-4 -bottom-2 border-t-8 border-t-gray-900 dark:border-t-white border-x-8 border-x-transparent"></div>
@@ -111,7 +108,7 @@ export default function EventCard({ event, index, editMode, onEditClick, onUploa
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
 
     </>
   );

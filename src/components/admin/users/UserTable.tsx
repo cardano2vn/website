@@ -14,7 +14,9 @@ function ReferralCountCell({ userId, onViewReferrals }: { userId: string; onView
       if (!res.ok) throw new Error('Failed to fetch referral count');
       return res.json();
     },
-    refetchInterval: 30000, 
+    refetchInterval: 30000,
+    staleTime: 1 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const referralCount = referralData?.data?.referralCount || 0;

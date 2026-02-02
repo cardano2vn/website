@@ -34,7 +34,9 @@ export function TagsPageClient() {
       if (!res.ok) throw new Error('Failed to fetch tags');
       const data = await res.json();
       return data?.data || [];
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
   const tags: Tag[] = queryData || [];
 

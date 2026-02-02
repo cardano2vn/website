@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import VideoSectionSkeleton from "./VideoSectionSkeleton";
 import NotFoundInline from "~/components/ui/not-found-inline";
@@ -218,21 +217,15 @@ export default function VideoSection() {
 
   if (error || !videos || videos.length === 0) {
     return (
-      <section id="videos" className="relative flex min-h-screen items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40">
-        <div className="mx-auto w-5/6 max-w-screen-2xl px-4 py-12 lg:px-8 lg:py-20">
-          <div className="relative">
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.6 }}
-              className="mb-8 lg:mb-16"
-            >
+      <section id="videos" className="relative flex min-h-screen items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-x-hidden">
+        <div className="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
+          <div className="relative min-w-0">
+            <div className="mb-8 lg:mb-16">
               <div className="mb-4 lg:mb-6 flex items-center gap-2 lg:gap-4">
                 <StarIcon size="lg" className="w-16 h-16" />
                 <h2 className="text-2xl lg:text-4xl xl:text-5xl font-bold text-gray-900 dark:text-white">The Cardano2vn Videos</h2>
               </div>
-            </motion.div>
+            </div>
             <NotFoundInline 
               onClearFilters={() => {
                 window.location.reload();
@@ -246,22 +239,16 @@ export default function VideoSection() {
 
   if (!currentVideo) {
     return (
-      <section id="videos" className="relative flex min-h-screen items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40">
-        <div className="mx-auto w-5/6 max-w-screen-2xl px-4 py-12 lg:px-8 lg:py-20">
-          <div className="relative">
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.6 }}
-              className="mb-8 lg:mb-16"
-            >
+      <section id="videos" className="relative flex min-h-screen items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-x-hidden">
+        <div className="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
+          <div className="relative min-w-0">
+            <div className="mb-8 lg:mb-16">
               <div className="mb-4 lg:mb-6 flex items-center gap-2 lg:gap-4">
                 <StarIcon size="lg" className="w-16 h-16" />
                 <h2 className="text-2xl lg:text-4xl xl:text-5xl font-bold text-gray-900 dark:text-white">The Cardano2vn Videos</h2>
               </div>
               <p className="max-w-3xl text-base lg:text-xl text-gray-700 dark:text-gray-300">Watch our latest videos and memorable moments.</p>
-            </motion.div>
+            </div>
             <NotFoundInline 
               onClearFilters={() => {
                 window.location.reload();
@@ -277,37 +264,16 @@ export default function VideoSection() {
     <section id="videos" className="relative flex min-h-screen items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40">
       <div className="mx-auto w-5/6 max-w-screen-2xl px-4 py-12 lg:px-8 lg:py-20">
         <div className="relative">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
-            className="mb-8 lg:mb-16"
-          >
+          <div className="mb-8 lg:mb-16">
             <div className="mb-4 lg:mb-6 flex items-center gap-2 lg:gap-4">
               <StarIcon size="lg" className="w-16 h-16" />
               <h2 className="text-2xl lg:text-4xl xl:text-5xl font-bold text-gray-900 dark:text-white">Videos</h2>
             </div>
             <p className="max-w-3xl text-base lg:text-xl text-gray-700 dark:text-gray-300">Xem những video mới nhất và những khoảnh khắc đáng nhớ về chúng tôi.</p>
-          </motion.div>
+          </div>
 
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ 
-                duration: 0.8, 
-                ease: "easeOut",
-                type: "spring",
-                stiffness: 100
-              }}
-              whileHover={{ 
-                scale: 1.02,
-                transition: { duration: 0.3 }
-              }}
-              className="w-full lg:w-[60%]"
-            >
+            <div className="w-full lg:w-[60%]">
               <div className="relative w-full aspect-video rounded-lg lg:rounded-xl overflow-hidden mb-4 lg:mb-6 shadow-lg lg:shadow-2xl">
                 <div id="video-player" className="w-full h-full"></div>
               </div>
@@ -316,7 +282,7 @@ export default function VideoSection() {
                   {currentVideo.title}
                 </h3>
                 {currentVideo.description && (
-                  <div className="absolute left-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[9999]">
+                  <div className="absolute left-0 top-full mt-2 opacity-0 group-hover:opacity-100 pointer-events-none z-[9999]">
                     <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs px-3 py-2 rounded-lg shadow-lg whitespace-pre-line max-w-[90vw] md:max-w-2xl relative">
                       {currentVideo.description}
                       <div className="absolute left-4 -top-2 border-b-8 border-b-gray-900 dark:border-b-gray-100 border-x-8 border-x-transparent"></div>
@@ -325,43 +291,20 @@ export default function VideoSection() {
                 )}
               </div>
               <p className="text-sm lg:text-lg text-gray-600 dark:text-gray-400 font-medium">{currentVideo.channelName}</p>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ 
-                duration: 0.6,
-                ease: "easeOut"
-              }}
-              className="w-full lg:w-[40%]"
-            >
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="mb-4 lg:mb-6"
-              >
+            <div className="w-full lg:w-[40%] min-w-0">
+              <div className="mb-4 lg:mb-6">
                 <h3 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white mb-1 lg:mb-2">Playlist – Videos Cardano2vn</h3>
                 <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">Select a video to watch</p>
-              </motion.div>
+              </div>
 
               <div className="rounded-md ring-1 ring-gray-200 dark:ring-gray-700 bg-white dark:bg-gray-800 shadow-sm">
                 <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto custom-scrollbar">
                   {displayedVideos.map((video, idx) => (
-                    <motion.div
+                    <div
                       key={video.id}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: false, amount: 0.3 }}
-                      transition={{ 
-                        duration: 0.5, 
-                        delay: idx * 0.1,
-                        ease: "easeOut"
-                      }}
-                      className={`group relative flex items-center py-3 px-3 cursor-pointer transition-all duration-200 ${
+                      className={`group relative flex items-center py-3 px-3 cursor-pointer ${
                         currentVideo.id === video.id
                           ? "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500"
                           : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
@@ -406,12 +349,12 @@ export default function VideoSection() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
                 
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

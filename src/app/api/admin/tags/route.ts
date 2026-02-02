@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { prisma } from '~/lib/prisma';
 import { withAdmin } from '~/lib/api-wrapper';
 import { createSuccessResponse, createErrorResponse } from '~/lib/api-response';
@@ -32,6 +33,7 @@ export const POST = withAdmin(async (req) => {
   }
   
   const tag = await prisma.tag.create({ data: { name } });
+  revalidateTag('tags');
   return NextResponse.json(createSuccessResponse(tag));
 });
 
@@ -42,6 +44,7 @@ export const DELETE = withAdmin(async (req) => {
   }
   
   await prisma.tag.delete({ where: { id } });
+  revalidateTag('tags');
   return NextResponse.json(createSuccessResponse({ success: true }));
 });
 
@@ -57,5 +60,6 @@ export const PATCH = withAdmin(async (req) => {
   }
   
   const tag = await prisma.tag.update({ where: { id }, data: { name } });
+  revalidateTag('tags');
   return NextResponse.json(createSuccessResponse(tag));
 }); 

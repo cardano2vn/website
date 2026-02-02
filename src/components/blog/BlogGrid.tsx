@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from "framer-motion";
 import { BlogPost, BlogMedia } from '~/constants/posts';
 
 function getYoutubeIdFromUrl(url: string) {
@@ -41,38 +40,26 @@ export default function BlogGrid({ posts, pageSize }: BlogGridProps) {
     }
 
     return (
-      <motion.div
+      <div
         key={post.id}
-        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ 
-          duration: 0.6, 
-          delay: index * 0.1,
-          ease: "easeOut"
-        }}
-        viewport={{ once: false, amount: 0.3 }}
-        whileHover={{ 
-          y: isLarge ? -8 : -4,
-          transition: { duration: 0.3 }
-        }}
-        className="relative group"
+        className="relative group min-w-0"
       >
-        <div className={`rounded-lg border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 backdrop-blur-sm shadow-lg transition-all duration-300 hover:border-gray-300 dark:hover:border-white/40 hover:shadow-xl overflow-hidden w-full max-w-full ${isLarge ? 'h-full' : ''}`}>
-          <a href={`/blog/${post.slug || post.id}`} className={isLarge ? "flex flex-col w-full h-full" : isHorizontal ? "flex gap-4 p-4 w-full h-24 lg:h-28 items-center" : "flex gap-3 p-3 w-full"}>
+        <div className={`rounded-lg border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 backdrop-blur-sm shadow-lg hover:border-gray-300 dark:hover:border-white/40 hover:shadow-xl overflow-hidden w-full max-w-full min-w-0 ${isLarge ? 'h-full' : ''}`}>
+          <a href={`/blog/${post.slug || post.id}`} className={`min-w-0 ${isLarge ? "flex flex-col w-full h-full" : isHorizontal ? "flex gap-3 sm:gap-4 p-3 sm:p-4 w-full min-w-0 h-24 lg:h-28 items-center" : "flex gap-3 p-3 w-full min-w-0"}`}>
             {isLarge ? (
               <>
                 <div className={`relative overflow-hidden ${fullWidth ? 'h-64 sm:h-80 lg:h-96' : isLarge ? 'h-64 sm:h-72 lg:h-80' : 'h-32 sm:h-40 lg:h-48'}`}>
                   <img
                     alt={post.title}
                     loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                    className="h-full w-full object-cover"
                     src={imageUrl}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = "/images/common/loading.png";
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-black/20" />
                 </div>
                 
                 <div className="p-4 flex flex-col gap-3 flex-1">
@@ -126,7 +113,7 @@ export default function BlogGrid({ posts, pageSize }: BlogGridProps) {
                   <img
                     alt={post.title}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    className="w-full h-full object-cover"
                     src={imageUrl}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -135,39 +122,35 @@ export default function BlogGrid({ posts, pageSize }: BlogGridProps) {
                   />
                 </div>
                 
-                <div className="flex-1 min-w-0">
-                  {/* Tags for small cards */}
+                <div className="flex-1 min-w-0 overflow-hidden">
                   {Array.isArray(post.tags) && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-1">
+                    <div className="flex flex-wrap gap-1 mb-1 min-w-0">
                       {post.tags.slice(0, 2).map((tag: any, tagIndex: number) => {
                         const tagName = typeof tag === 'string' ? tag : (tag?.name || '');
                         if (!tagName) return null;
                         return (
-                          <span 
+                          <span
                             key={tagIndex}
-                            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 shrink-0"
                           >
                             {tagName}
                           </span>
                         );
                       })}
                       {post.tags.length > 2 && (
-                        <span 
-                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
                           +{post.tags.length - 2}
                         </span>
                       )}
                     </div>
                   )}
-                  
                   <h3
-                    className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 mb-1"
+                    className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 mb-1 break-words"
                     title={post.title}
                   >
                     {post.title}
                   </h3>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                  <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
                     <span className="font-medium">{post.author || "Admin"}</span>
                     <span className="mx-1">•</span>
                     <span className="font-mono">
@@ -182,11 +165,11 @@ export default function BlogGrid({ posts, pageSize }: BlogGridProps) {
               </>
             ) : (
               <>
-                <div className="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg">
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 overflow-hidden rounded-lg">
                   <img
                     alt={post.title}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    className="w-full h-full object-cover"
                     src={imageUrl}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -194,37 +177,32 @@ export default function BlogGrid({ posts, pageSize }: BlogGridProps) {
                     }}
                   />
                 </div>
-                
-                <div className="flex-1 min-w-0">
-                  {/* Tags for small cards */}
+                <div className="flex-1 min-w-0 overflow-hidden">
                   {Array.isArray(post.tags) && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-1">
+                    <div className="flex flex-wrap gap-1 mb-1 min-w-0">
                       {post.tags.slice(0, 2).map((tag: any, tagIndex: number) => {
                         const tagName = typeof tag === 'string' ? tag : (tag?.name || '');
                         if (!tagName) return null;
                         return (
-                          <span 
+                          <span
                             key={tagIndex}
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 shrink-0"
                           >
                             {tagName}
                           </span>
                         );
                       })}
                       {post.tags.length > 2 && (
-                        <span 
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
                           +{post.tags.length - 2}
                         </span>
                       )}
                     </div>
                   )}
-                  
-                  <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 mb-1">
+                  <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 mb-1 break-words">
                     {post.title}
                   </h3>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                  <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
                     <span className="font-medium">{post.author || "Admin"}</span>
                     <span className="mx-1">•</span>
                     <span className="font-mono">
@@ -258,7 +236,7 @@ export default function BlogGrid({ posts, pageSize }: BlogGridProps) {
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
     );
   };
 
@@ -396,9 +374,9 @@ export default function BlogGrid({ posts, pageSize }: BlogGridProps) {
 
   return (
     <>
-      <motion.section className={`grid gap-2 ${layout.className}`}>
+      <section className={`grid gap-2 min-w-0 w-full ${layout.className}`}>
         {layout.content}
-      </motion.section>
+      </section>
 
       {posts.length > PAGE_SIZE && (
         <div className="mt-6 flex items-center justify-center gap-2">

@@ -22,10 +22,10 @@ export default function Loading() {
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-white dark:bg-gray-900 transition-opacity">
-      <div className="pointer-events-none select-none fixed right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-0 opacity-20">
-        <div className="relative w-[900px] h-[900px] sm:w-[1500px] sm:h-[1500px] md:w-[2400px] md:h-[2400px] rounded-full bg-gradient-to-br from-[#00A3FF]/10 to-[#003C8C]/10 dark:from-[#00A3FF]/20 dark:to-[#003C8C]/20">
-          <div className="absolute inset-4 rounded-full bg-gradient-to-br from-[#00A3FF]/20 to-[#003C8C]/20 dark:from-[#00A3FF]/30 dark:to-[#003C8C]/30">
-            <div className="absolute inset-4 rounded-full bg-gradient-to-br from-[#00A3FF]/30 to-[#003C8C]/30 dark:from-[#00A3FF]/40 dark:to-[#003C8C]/40">
+      <div className="pointer-events-none select-none fixed right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-0 opacity-15">
+        <div className="relative w-[900px] h-[900px] sm:w-[1500px] sm:h-[1500px] md:w-[2400px] md:h-[2400px] rounded-full bg-[#00A3FF]/10 dark:bg-[#003C8C]/20">
+          <div className="absolute inset-4 rounded-full bg-[#00A3FF]/20 dark:bg-[#003C8C]/30">
+            <div className="absolute inset-4 rounded-full bg-[#00A3FF]/30 dark:bg-[#003C8C]/40">
               <div className="absolute inset-4 rounded-full overflow-hidden flex items-center justify-center">
                 <img
                   src="/images/common/loading.png"

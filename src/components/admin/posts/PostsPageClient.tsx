@@ -51,7 +51,9 @@ export function PostsPageClient() {
       const res = await fetch('/api/admin/posts');
       if (!res.ok) throw new Error('Failed to fetch posts');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
   const posts: Post[] = queryData?.data || [];
 
@@ -80,7 +82,9 @@ export function PostsPageClient() {
       const data = await res.json();
       console.log('Media API response:', data);
       return data;
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
   const mediaStats = mediaData?.data?.stats || {
     total: 0,

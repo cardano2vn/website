@@ -87,8 +87,8 @@ export default function EditModal({ isOpen, onClose, event, index, onSave }: Edi
       <Dialog as="div" className="relative z-50" onClose={() => !isSaving && onClose()}>
         <Transition.Child
           as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
+          enter="ease-out duration-0"
+          enterFrom="opacity-100"
           enterTo="opacity-100"
           leave="ease-in duration-200"
           leaveFrom="opacity-100"
@@ -101,8 +101,8 @@ export default function EditModal({ isOpen, onClose, event, index, onSave }: Edi
           <div className="flex min-h-full items-center justify-center p-4">
             <Transition.Child
               as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
+              enter="ease-out duration-0"
+              enterFrom="opacity-100 scale-100"
               enterTo="opacity-100 scale-100"
               leave="ease-in duration-200"
               leaveFrom="opacity-100 scale-100"

@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import { flushSync } from "react-dom";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 
 import Link from "next/link";
@@ -13,8 +15,12 @@ import ReactionCount from "~/components/blog/ReactionCount";
 import BlogDetailSkeleton from "~/components/blog/BlogDetailSkeleton";
 import RelatedPostsSlider from "~/components/blog/RelatedPostsSlider";
 import LatestPostsSidebar from "~/components/blog/LatestPostsSidebar";
-import ServiceAdCard from "~/components/blog/ServiceAdCard";
 import { useSession } from "next-auth/react";
+
+const ServiceAdCard = dynamic(
+  () => import("~/components/blog/ServiceAdCard"),
+  { ssr: false }
+);
 import { useToastContext } from '~/components/toast-provider';
 import { TipTapPreview } from '~/components/ui/tiptap-preview';
 import { useQuery } from '@tanstack/react-query';
@@ -87,7 +93,9 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
       if (!res.ok) throw new Error('Failed to fetch post');
       return res.json();
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
   const post: BlogPostDetail | null = postData?.data || null;
 
@@ -101,7 +109,9 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
       if (!res.ok) throw new Error('Failed to fetch reactions');
       return res.json();
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
   const reactions: { [type: string]: number } = reactionsData?.data?.reactions || {};
 
@@ -116,7 +126,9 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
       if (!res.ok) throw new Error('Failed to fetch current user reaction');
       return res.json();
     },
-    enabled: !!slug && isLoggedIn
+    enabled: !!slug && isLoggedIn,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
   const currentUserReaction: string | null = currentUserReactionData?.data?.currentUserReaction || null;
 
@@ -127,15 +139,15 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
     queryKey: ['related-posts', slug, post?.tags],
     queryFn: async () => {
       if (!post?.tags || post.tags.length === 0) return { data: [] };
-      
       const tagNames = post.tags.map(tag => typeof tag === 'string' ? tag : tag.name);
       const tagParams = tagNames.map(tag => `tags=${encodeURIComponent(tag)}`).join('&');
-      
       const res = await fetch(`/api/admin/posts?public=1&${tagParams}&exclude=${slug}&limit=4`);
       if (!res.ok) throw new Error('Failed to fetch related posts');
       return res.json();
     },
-    enabled: !!post?.tags && post.tags.length > 0
+    enabled: !!post?.tags && post.tags.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
   const relatedPosts = relatedPostsData?.data || [];
 
@@ -554,7 +566,7 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
               </button>
               <button 
                 className="flex flex-1 items-center justify-center gap-2 py-3 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group"
-                onClick={() => setShowShareModal(true)}
+                onClick={() => flushSync(() => setShowShareModal(true))}
               >
                 <Share2 className="h-5 w-5 group-hover:scale-110 transition-transform" />
                 <span className="font-medium">Share</span>

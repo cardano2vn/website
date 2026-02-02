@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { prisma } from '~/lib/prisma';
 import { withAdmin } from '~/lib/api-wrapper';
 import { createSuccessResponse, createErrorResponse } from '~/lib/api-response';
@@ -254,6 +255,7 @@ export const POST = withAdmin(async (req, user) => {
       },
     });
 
+    revalidateTag('public-posts');
     return NextResponse.json(createSuccessResponse(post));
   } catch (error) {
     if (error instanceof Error && error.message.includes('Validation failed')) {

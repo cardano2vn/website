@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { generateDeviceFingerprint } from '~/lib/device-fingerprint';
-import { getDeviceAttemptDetails } from '~/lib/device-attempt-utils';
 import { createSuccessResponse, createErrorResponse } from '~/lib/api-response';
 
 export const POST = async (req: Request) => {
@@ -11,7 +9,10 @@ export const POST = async (req: Request) => {
       return NextResponse.json(createErrorResponse('Device data is required', 'MISSING_DEVICE_DATA'), { status: 400 });
     }
 
+    const [{ generateDeviceFingerprint }] = await Promise.all([import('~/lib/device-fingerprint')]);
     const deviceFingerprint = await generateDeviceFingerprint(deviceData.userAgent, deviceData);
+
+    const { getDeviceAttemptDetails } = await import('~/lib/device-attempt-utils');
     const deviceDetails = await getDeviceAttemptDetails(deviceFingerprint);
 
     if (!deviceDetails) {

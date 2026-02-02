@@ -28,7 +28,9 @@ export function useMembersWithTabs() {
       const res = await fetch('/api/admin/members', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch members');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const {
@@ -41,7 +43,9 @@ export function useMembersWithTabs() {
       const res = await fetch('/api/admin/tabs', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch tabs');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const members: Member[] = membersData?.data || [];

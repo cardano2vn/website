@@ -6,7 +6,20 @@ const withMDX = createMDX();
 
 const config: NextConfig = {
   reactStrictMode: true,
-
+  transpilePackages: ["lucid-cardano"],
+  experimental: {
+    optimizePackageImports: ["@prisma/client", "@tanstack/react-query", "lucide-react", "framer-motion"],
+  },
+  webpack: (config, { isServer }) => {
+    config.experiments = { ...config.experiments, topLevelAwait: true };
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
+  },
 
   // experimental: {
   //   esmExternals: 'loose',

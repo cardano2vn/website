@@ -1,55 +1,23 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useToastContext } from '~/components/toast-provider';
 import { ContactForm } from './ContactForm';
-import ContactFormManager from './ContactFormManager';
 import { ContactFormData, FormErrors } from '~/constants/contact';
 import { useDeviceFingerprint } from '~/hooks/useDeviceFingerprint';
 import ContactFormImage from './ContactFormImage';
-import ContactFormTabs from './ContactFormTabs';
 import ContactFormSkeleton from './ContactFormSkeleton';
 import { useQuery } from '@tanstack/react-query';
-import Title from "~/components/title";
 import StarIcon from "~/components/ui/StarIcon";
 import BannedForm from "~/components/BannedForm";
-type TabType = "form" | "manage";
 
 export default function ContactFormSection() {
   const { data: session } = useSession();
   const { showSuccess, showError } = useToastContext();
-  
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>("form");
+
   const [selectedCourseImage, setSelectedCourseImage] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
-  
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!session?.user) {
-        setIsAdmin(false);
-        return;
-      }
-      
-      const sessionUser = session.user as { address?: string; email?: string };
-      const url = new URL('/api/user', window.location.origin);
-      if (sessionUser.address) url.searchParams.set('address', sessionUser.address);
-      if (sessionUser.email) url.searchParams.set('email', sessionUser.email);
-
-      try {
-        const response = await fetch(url.toString());
-        if (response.ok) {
-          const data = await response.json();
-          setIsAdmin(data?.data?.role?.name === 'ADMIN');
-        }
-      } catch (error) {
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, [session]);
   const [formData, setFormData] = useState<ContactFormData>({
     "your-name": "",
     "your-number": "",
@@ -256,24 +224,6 @@ export default function ContactFormSection() {
       }
     }
   }, [courses, selectedCourse, formData["your-course"]]);
-
-  const memoizedContactFormManager = useMemo(() => {
-    if (!isAdmin) {
-      return null;
-    }
-    
-    if (coursesError) {
-      return (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <p className="text-red-700 dark:text-red-300">
-            Error loading courses: {(coursesError as Error).message}
-          </p>
-        </div>
-      );
-    }
-    
-    return <ContactFormManager />;
-  }, [coursesError, isAdmin]);
 
   const resetFormState = useCallback(() => {
     setFormData({
@@ -637,85 +587,59 @@ export default function ContactFormSection() {
     }
   };
 
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
-  };
-
-
   return (
     <section
       id="contact"
-      className="relative flex min-h-[90vh] items-center overflow-hidden border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40"
+      className="relative flex min-h-[90vh] items-center overflow-x-hidden border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0"
     >
-      <div className="relative mx-auto max-w-7xl px-6 py-12 lg:px-8">
-        <div className={`grid items-center gap-12 ${activeTab === "manage" ? "lg:grid-cols-1" : "lg:grid-cols-2"}`}>
-          {activeTab === "form" && (
-            <div className="relative flex flex-col h-full justify-center">
-              <div className="relative w-full">
-                <div className="relative mb-16">
-                  <div className="mb-6 flex items-center gap-4">
-                    <StarIcon size="lg" className="w-16 h-16" />
-                    <h2 className="text-2xl lg:text-4xl xl:text-5xl font-bold text-gray-900 dark:text-white">Từ Zero đến Builder</h2>
-                  </div>
-                  <div className="max-w-3xl">
-                    <p className="text-xl text-gray-600 dark:text-gray-300">
-                      Tham gia chương trình đào tạo Blockchain chuyên sâu của chúng tôi, nơi bạn không chỉ học, mà còn trực tiếp xây dựng những ứng dụng phi tập trung có giá trị cho cộng đồng.
-                    </p>
-                  </div>
+      <div className="relative mx-auto max-w-7xl w-full min-w-0 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid items-center gap-8 sm:gap-12 lg:grid-cols-2 min-w-0">
+          <div className="relative flex flex-col h-full justify-center">
+            <div className="relative w-full">
+              <div className="relative mb-16">
+                <div className="mb-6 flex items-center gap-4">
+                  <StarIcon size="lg" className="w-16 h-16" />
+                  <h2 className="text-2xl lg:text-4xl xl:text-5xl font-bold text-gray-900 dark:text-white">Từ Zero đến Builder</h2>
                 </div>
-                {selectedCourseImage && (
-                  <div className="mt-6 relative w-full h-[500px]">
-                    <ContactFormImage imageUrl={selectedCourseImage} />
-                  </div>
-                )}
+                <div className="max-w-3xl">
+                  <p className="text-xl text-gray-600 dark:text-gray-300">
+                    Tham gia chương trình đào tạo Blockchain chuyên sâu của chúng tôi, nơi bạn không chỉ học, mà còn trực tiếp xây dựng những ứng dụng phi tập trung có giá trị cho cộng đồng.
+                  </p>
+                </div>
               </div>
+              {selectedCourseImage && (
+                <div className="mt-6 relative w-full h-[500px]">
+                  <ContactFormImage imageUrl={selectedCourseImage} />
+                </div>
+              )}
             </div>
-          )}
-          <div className={`relative ${activeTab === "manage" ? "lg:col-span-1" : "lg:col-span-1"}`}>
-            {isAdmin && (
-              <ContactFormTabs activeTab={activeTab} onTabChange={handleTabChange} />
+          </div>
+          <div className="relative">
+            {isDeviceBanned ? (
+              <BannedForm
+                failedAttempts={banDetails?.failedAttempts || 0}
+                bannedUntil={banDetails?.bannedUntil || new Date().toISOString()}
+                lastAttemptAt={banDetails?.lastAttemptAt || new Date().toISOString()}
+              />
+            ) : (
+              <ContactForm
+                formData={formData}
+                errors={errors}
+                isSubmitting={isSubmitting}
+                captchaValid={captchaValid}
+                captchaKey={captchaKey}
+                referralCodeValid={referralCodeValid}
+                referralCodeLocked={referralCodeLocked}
+                onInputChange={handleInputChange}
+                onSubmit={handleSubmit}
+                onCaptchaChange={({ isValid, text, answer }) => {
+                  setCaptchaValid(isValid);
+                  setCaptchaText(text);
+                  setCaptchaAnswer(answer);
+                }}
+                onCourseChange={handleCourseChange}
+              />
             )}
-            {activeTab === "form" ? (
-              isDeviceBanned ? (
-                <BannedForm
-                  failedAttempts={banDetails?.failedAttempts || 0}
-                  bannedUntil={banDetails?.bannedUntil || new Date().toISOString()}
-                  lastAttemptAt={banDetails?.lastAttemptAt || new Date().toISOString()}
-                />
-              ) : (
-                <ContactForm
-                  formData={formData}
-                  errors={errors}
-                  isSubmitting={isSubmitting}
-                  captchaValid={captchaValid}
-                  captchaKey={captchaKey}
-                  referralCodeValid={referralCodeValid}
-                  referralCodeLocked={referralCodeLocked}
-                  onInputChange={handleInputChange}
-                  onSubmit={handleSubmit}
-                  onCaptchaChange={({ isValid, text, answer }) => {
-                    setCaptchaValid(isValid);
-                    setCaptchaText(text);
-                    setCaptchaAnswer(answer);
-                  }}
-                  onCourseChange={handleCourseChange}
-                />
-              )
-            ) : activeTab === "manage" ? (
-              <div>
-                {coursesLoading ? (
-                  <ContactFormSkeleton />
-                ) : coursesError ? (
-                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-red-700 dark:text-red-300">
-                      Error loading courses: {(coursesError as Error).message}
-                    </p>
-                  </div>
-                ) : (
-                  memoizedContactFormManager
-                )}
-              </div>
-            ) : null}
           </div>
         </div>
       </div>

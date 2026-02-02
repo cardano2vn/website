@@ -1,198 +1,131 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 import { images } from "~/public/images";
-// import Action from "~/components/action";
-import AdminTabs from "./AdminTabs";
 import LandingContentSection from "./LandingContentSection";
-import LandingMediaSection from "./LandingMediaSection";
-import LandingManageSection from "./LandingManageSection";
 import FloatingNotification from "~/components/ui/FloatingNotification";
 
+const SLIDE_INTERVAL_MS = 4000;
+
+const initialFormData = {
+  section: "hero",
+  title: "",
+  subtitle: "",
+  description: "",
+  mainText: "",
+  media1Url: "",
+  media2Url: "",
+  media3Url: "",
+  media4Url: "",
+  publishStatus: "DRAFT" as "DRAFT" | "PUBLISHED",
+};
+
 export default function LandingSection() {
-  const { data: session } = useSession();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"content" | "manage">("content");
-  const [formData, setFormData] = useState({
-    section: 'hero',
-    title: '',
-    subtitle: '',
-    description: '',
-    mainText: '',
-    media1Url: '',
-    media2Url: '',
-    media3Url: '',
-    media4Url: '',
-    publishStatus: 'DRAFT' as 'DRAFT' | 'PUBLISHED'
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [slideIndex, setSlideIndex] = useState(0);
 
-  const { data: userData, error: userDataError } = useQuery({
-    queryKey: ['user-role'],
+  const { data: landingContents = [] } = useQuery({
+    queryKey: ["landing-content"],
     queryFn: async () => {
-      if (!session?.user) {
-        return null;
-      }
-      const sessionUser = session.user as { address?: string; email?: string };
-      const url = new URL('/api/user', window.location.origin);
-      if (sessionUser.address) url.searchParams.set('address', sessionUser.address);
-      if (sessionUser.email) url.searchParams.set('email', sessionUser.email);
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error('Failed to fetch user role');
-      }
-      return response.json();
-    },
-    enabled: !!session?.user,
-  });
-
-
-  const { data: landingContents = [], error: landingContentsError } = useQuery({
-    queryKey: ['landing-content'],
-    queryFn: async () => {
-      const response = await fetch('/api/landing-content');
-      if (!response.ok) {
-        throw new Error('Failed to fetch landing content');
-      }
+      const response = await fetch("/api/landing-content");
+      if (!response.ok) throw new Error("Failed to fetch landing content");
       const data = await response.json();
-      return data?.data || [];
-    }
+      return data?.data ?? [];
+    },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
-
-
-
-  useEffect(() => {
-    const adminStatus = userData?.data?.role?.name === 'ADMIN';
-    setIsAdmin(adminStatus);
-  }, [userData]);
 
   useEffect(() => {
     if (landingContents.length > 0) {
-      const firstContent = landingContents[0];
+      const first = landingContents[0];
       setFormData({
-        section: firstContent.section || 'hero',
-        title: firstContent.title || '',
-        subtitle: firstContent.subtitle || '',
-        description: firstContent.description || '',
-        mainText: firstContent.mainText || '',
-        media1Url: firstContent.media1Url || '',
-        media2Url: firstContent.media2Url || '',
-        media3Url: firstContent.media3Url || '',
-        media4Url: firstContent.media4Url || '',
-        publishStatus: firstContent.publishStatus || 'DRAFT'
+        section: first.section ?? "hero",
+        title: first.title ?? "",
+        subtitle: first.subtitle ?? "",
+        description: first.description ?? "",
+        mainText: first.mainText ?? "",
+        media1Url: first.media1Url ?? "",
+        media2Url: first.media2Url ?? "",
+        media3Url: first.media3Url ?? "",
+        media4Url: first.media4Url ?? "",
+        publishStatus: first.publishStatus ?? "DRAFT",
       });
     }
   }, [landingContents]);
 
-  const handleTabChange = (tab: "content" | "manage") => {
-    setActiveTab(tab);
+  const mediaItems = useMemo(() => {
+    const urls = [
+      formData.media1Url,
+      formData.media2Url,
+      formData.media3Url,
+      formData.media4Url,
+    ].filter(Boolean);
+    if (urls.length === 0) return [{ url: images.loading.src, title: formData.title || "" }];
+    return urls.map((url) => ({ url: url!, title: formData.title || "" }));
+  }, [
+    formData.media1Url,
+    formData.media2Url,
+    formData.media3Url,
+    formData.media4Url,
+    formData.title,
+  ]);
+
+  useEffect(() => {
+    if (mediaItems.length <= 1) return;
+    const t = setInterval(() => {
+      setSlideIndex((i) => (i + 1) % mediaItems.length);
+    }, SLIDE_INTERVAL_MS);
+    return () => clearInterval(t);
+  }, [mediaItems.length]);
+
+  const content = {
+    title: formData.title || "",
+    subtitle: formData.subtitle || "",
+    description: formData.description || "",
+    mainText: formData.mainText || "",
   };
 
-  const getMediaItems = () => {
-    const items: any[] = [];
-    
-    if (formData.media1Url) {
-      items.push({
-        url: formData.media1Url,
-        type: 'image',
-        title: formData.title || 'Media 1'
-      });
-    }
-    
-    if (formData.media2Url) {
-      items.push({
-        url: formData.media2Url,
-        type: 'image',
-        title: formData.title || 'Media 2'
-      });
-    }
-    
-    if (formData.media3Url) {
-      items.push({
-        url: formData.media3Url,
-        type: 'image',
-        title: formData.title || 'Media 3'
-      });
-    }
-    
-    if (formData.media4Url) {
-      items.push({
-        url: formData.media4Url,
-        type: 'image',
-        title: formData.title || 'Media 4'
-      });
-    }
-    
-    if (items.length === 0) {
-      return [
-        { url: images.loading.src, type: 'image', title: 'C2VN' },
-        { url: images.loading.src, type: 'image', title: 'C2VN' },
-        { url: images.loading.src, type: 'image', title: 'C2VN' },
-        { url: images.loading.src, type: 'image', title: 'C2VN' }
-      ];
-    }
-    
-    return items;
-  };
-
-  const mediaItems = getMediaItems();
-
-  const getContent = () => {
-    return {
-      title: formData.title || "",
-      subtitle: formData.subtitle || "", 
-      description: formData.description || "",
-      mainText: formData.mainText || "",
-    };
-  };
-
-  const content = getContent();
+  const currentSlide = mediaItems[slideIndex] ?? mediaItems[0];
 
   return (
     <>
-      <section id="Landing" className="relative flex min-h-screen items-center overflow-hidden scroll-mt-28 md:scroll-mt-40">
-        
-        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-          <motion.div
-            className="relative"
-            variants={{
-              hidden: {},
-              show: {
-                transition: {
-                  staggerChildren: 0.15,
-                },
-              },
-            }}
-            initial="hidden"
-            animate="show"
-          >
-            {isAdmin && (
-              <AdminTabs activeTab={activeTab} handleTabChange={handleTabChange} />
-            )}
-
-            {activeTab === "content" && (
-              <div className="grid items-center gap-8 lg:grid-cols-2">
-                <LandingContentSection content={content} />
-                <LandingMediaSection mediaItems={mediaItems} />
-              </div>
-            )}
-
-            {activeTab === "manage" && (
-              <LandingManageSection 
-                landingContents={landingContents} 
-                formData={formData}
-                setFormData={setFormData}
-              />
-            )}
-          </motion.div>
+      <section id="Landing" className="scroll-mt-28 md:scroll-mt-40 bg-white dark:bg-gray-50 w-full min-w-0 overflow-x-hidden">
+        <div className="mx-auto max-w-7xl w-full min-w-0 px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+          <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:grid-cols-2 lg:gap-16 items-center min-w-0">
+            <LandingContentSection content={content} />
+            <div className="hidden lg:block relative aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-200">
+              {currentSlide && (
+                <img
+                  key={currentSlide.url}
+                  src={currentSlide.url}
+                  alt={currentSlide.title}
+                  className="w-full h-full object-cover animate-in fade-in duration-500"
+                />
+              )}
+              {mediaItems.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {mediaItems.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setSlideIndex(i)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        i === slideIndex
+                          ? "w-6 bg-blue-600 dark:bg-blue-400"
+                          : "w-1.5 bg-white/70 hover:bg-white/90"
+                      }`}
+                      aria-label={`Slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        {/* <Action title="Next" href="#trust" /> */}
       </section>
-      
       <FloatingNotification />
     </>
   );
-} 
+}

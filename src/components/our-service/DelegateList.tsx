@@ -1,77 +1,50 @@
 "use client";
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useToastContext } from "~/components/toast-provider";
 
 const BLOCKFROST_PROXY = "/api/blockfrost";
+const BLOCKFROST_STALE_MS = 7 * 24 * 60 * 60 * 1000;
 
 type DelegatorItem = {
-  address?: string; 
+  address?: string;
   stake_address?: string;
   voting_power?: string | number;
   amount?: string | number;
 };
 
-type AccountInfo = {
-  active?: boolean;
-  controlled_amount?: string;
-};
-
 export default function DelegateList({ drepId, poolId, title }: { drepId?: string; poolId?: string; title?: string }) {
   const { showError, showSuccess } = useToastContext();
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [delegators, setDelegators] = React.useState<DelegatorItem[]>([]);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    async function run() {
-      setLoading(true);
-      setError(null);
-      try {
-        const basePath = drepId
-          ? `/governance/dreps/${drepId}/delegators`
-          : poolId
-          ? `/pools/${poolId}/delegators`
-          : null;
-        if (!basePath) throw new Error("Missing drepId or poolId");
-        const url = new URL(`${BLOCKFROST_PROXY}${basePath}`, window.location.origin);
-        url.searchParams.set("order", "desc");
-        url.searchParams.set("count", "5");
-        url.searchParams.set("page", "1");
-        const res = await fetch(url.toString());
-        if (!res.ok) throw new Error(`Delegators HTTP ${res.status}`);
-        const data = await res.json();
-        const baseList: DelegatorItem[] = Array.isArray(data) ? data.slice(0, 5) : [];
-        const withDetails = await Promise.all(
-          baseList.map(async (d) => {
-            const addr = (d as any).stake_address || (d as any).address;
-            let details: AccountInfo | null = null;
-            try {
-              if (addr) {
-                const a = await fetch(`${BLOCKFROST_PROXY}/accounts/${addr}`);
-                if (a.ok) details = await a.json();
-              }
-            } catch {}
-            return { ...d, __details: details } as DelegatorItem & { __details?: AccountInfo | null };
-          })
-        );
-        if (!cancelled) setDelegators(withDetails);
-      } catch (e) {
-        const msg = (e as Error).message;
-        if (!cancelled) {
-          setError(msg);
-          showError("Failed to load delegators", msg);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [drepId, poolId, showError]);
+  const basePath = drepId
+    ? `/governance/dreps/${drepId}/delegators`
+    : poolId
+    ? `/pools/${poolId}/delegators`
+    : null;
+  const queryKey = basePath ? ["blockfrost", basePath, "order=desc", "count=5", "page=1"] : ["blockfrost-delegators-skip"];
+
+  const { data: delegators = [], isLoading: loading, error: queryError, isError } = useQuery({
+    queryKey,
+    queryFn: async (): Promise<DelegatorItem[]> => {
+      if (!basePath) return [];
+      const url = new URL(`${BLOCKFROST_PROXY}${basePath}`, typeof window !== "undefined" ? window.location.origin : "");
+      url.searchParams.set("order", "desc");
+      url.searchParams.set("count", "5");
+      url.searchParams.set("page", "1");
+      const res = await fetch(url.toString());
+      if (res.status === 403) return [];
+      if (!res.ok) throw new Error(`Delegators HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.slice(0, 5) : [];
+    },
+    enabled: !!basePath,
+    staleTime: BLOCKFROST_STALE_MS,
+    gcTime: 10 * 60 * 60 * 1000,
+    retry: (_, err) => !String(err).includes("403"),
+  });
+
+  const error = isError && queryError ? (queryError as Error).message : null;
 
   function shorten(text: string, head = 10, tail = 8) {
     if (!text) return "";
@@ -126,6 +99,11 @@ export default function DelegateList({ drepId, poolId, title }: { drepId?: strin
       {error && (
         <div className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</div>
       )}
+      {!loading && !error && delegators.length === 0 && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Delegator information is not available. This endpoint may require a premium Blockfrost API key.
+        </p>
+      )}
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -142,8 +120,6 @@ export default function DelegateList({ drepId, poolId, title }: { drepId?: strin
           {delegators.map((d: any, idx) => {
             const stake = d.stake_address ?? d.address ?? "";
             const power = (d as any).voting_power ?? (d as any).amount ?? (d as any).live_stake;
-            const active = d.__details?.active;
-            const controlled = d.__details?.controlled_amount;
             return (
               <div
                 key={`${stake}-${idx}`}
@@ -163,7 +139,6 @@ export default function DelegateList({ drepId, poolId, title }: { drepId?: strin
                     </div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                       <span>Power: {formatAda(power)}</span>
-                      {controlled && <span>Controlled: {formatAda(controlled)}</span>}
                     </div>
                   </div>
                 </div>

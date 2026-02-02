@@ -45,7 +45,9 @@ export default function BlogPageClient() {
       const res = await fetch(`/api/public/posts?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch posts');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -64,6 +66,8 @@ export default function BlogPageClient() {
       const data = await res.json();
       return data?.data || [];
     },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
   const allTags: BlogTag[] = tagsData || [];
 
@@ -74,9 +78,9 @@ export default function BlogPageClient() {
   }, [search, selectedTags]);
 
   return (
-    <main className="relative pt-20 bg-white dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-950 dark:to-gray-900">
+    <main className="relative pt-20 bg-white dark:bg-gray-950 overflow-x-hidden">
       <BackgroundMotion />
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+      <div className="mx-auto max-w-7xl w-full px-4 py-12 sm:px-6 sm:py-20 lg:px-8 lg:py-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

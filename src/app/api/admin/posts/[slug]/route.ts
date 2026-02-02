@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { prisma } from '~/lib/prisma';
 import { withAdmin } from '~/lib/api-wrapper';
 import { createSuccessResponse, createErrorResponse } from '~/lib/api-response';
@@ -149,6 +150,7 @@ export const PUT = withAdmin(async (req, user) => {
       },
     });
 
+    revalidateTag('public-posts');
     return NextResponse.json(createSuccessResponse(updatedPost));
   } catch (error) {
     return NextResponse.json(createErrorResponse('Internal server error', 'INTERNAL_ERROR'), { status: 500 });
@@ -178,6 +180,7 @@ export const DELETE = withAdmin(async (req) => {
       where: { id: post.id }
     });
 
+    revalidateTag('public-posts');
     return NextResponse.json(createSuccessResponse({ message: 'Post deleted successfully' }));
   } catch (error) {
     return NextResponse.json(

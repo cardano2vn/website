@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { Course } from "~/constants/admin";
 import CourseModal from "./CourseModal";
 import { Pagination } from "~/components/ui/pagination";
@@ -43,6 +43,8 @@ export default function CourseSection() {
       const data = await res.json();
       return data?.data || [];
     },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
 
@@ -62,8 +64,10 @@ export default function CourseSection() {
   while (displayCourses.length < 3) displayCourses.push(null);
 
   const handleCourseClick = (course: Course) => {
-    setSelectedCourse(course);
-    setIsModalOpen(true);
+    flushSync(() => {
+      setSelectedCourse(course);
+      setIsModalOpen(true);
+    });
   };
 
   // Find the index of the selected course in the current courses list
@@ -131,9 +135,9 @@ export default function CourseSection() {
   };
 
   return (
-    <section id="courses" className="relative flex min-h-[80vh] items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40">
-      <section className="mx-auto w-5/6 max-w-screen-2xl px-6 py-12 lg:px-8">
-        <div className="relative">
+    <section id="courses" className="relative flex min-h-[80vh] items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-x-hidden">
+      <section className="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="relative min-w-0">
           <div className="mb-8">
             <div className="mb-4 flex items-center gap-4">
               <StarIcon size="lg" className="w-16 h-16" />
@@ -209,43 +213,27 @@ export default function CourseSection() {
           {activeTab === "quiz-blockchain" ? (
             <ContestSection />
           ) : activeTab === "latest" ? (
-            <div className="grid max-w-none gap-8 md:gap-10 lg:gap-8 lg:grid-cols-3">
+            <div className="grid max-w-none min-w-0 w-full gap-6 sm:gap-8 md:gap-10 lg:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {isLoading ? (
                 [...Array(3)].map((_, idx) => (
-                  <motion.div
+                  <div
                     key={idx}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.3 }}
-                    transition={{ duration: 0.6, delay: idx * 0.2 }}
                     className="animate-pulse"
                   >
                     <div className="bg-gray-300 dark:bg-gray-700 rounded-lg h-48 mb-4"></div>
                     <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
                     <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
                     <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
-                  </motion.div>
+                  </div>
                 ))
               ) : (
                 displayCourses.map((course, idx) =>
                   course ? (
-                    <motion.div
+                    <div
                       key={course.id}
-                      initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ 
-                        duration: 0.6, 
-                        delay: idx * 0.2,
-                        ease: "easeOut"
-                      }}
-                      viewport={{ once: false, amount: 0.3 }}
-                      whileHover={{ 
-                        y: -8,
-                        transition: { duration: 0.3 }
-                      }}
-                      className="flex flex-col"
+                      className="flex flex-col min-w-0"
                     >
-                      <div className="rounded-xl border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 backdrop-blur-sm shadow-xl transition-all duration-300 hover:border-gray-300 dark:hover:border-white/40 hover:shadow-2xl h-full flex flex-col overflow-hidden cursor-pointer"
+                      <div className="rounded-xl border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 backdrop-blur-sm shadow-xl hover:border-gray-300 dark:hover:border-white/40 hover:shadow-2xl h-full flex flex-col overflow-hidden cursor-pointer min-w-0"
                         onClick={() => handleCourseClick(course)}
                       >
                         {/* Image Section - Fixed height */}
@@ -253,7 +241,7 @@ export default function CourseSection() {
                           <img
                             src={course.image || "/images/common/loading.png"}
                             alt={course.name}
-                            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                            className="h-full w-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = "/images/common/loading.png";
@@ -268,7 +256,7 @@ export default function CourseSection() {
                             <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
                               {course.title || course.name}
                             </h3>
-                            <div className="absolute left-0 top-full mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
+                            <div className="absolute left-0 top-full mt-1 opacity-0 group-hover:opacity-100 pointer-events-none z-20">
                               <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-pre-line max-w-[80vw] md:max-w-sm relative">
                                 {course.title || course.name}
                                 <div className="absolute left-4 -top-2 border-b-8 border-b-gray-900 dark:border-b-gray-100 border-x-8 border-x-transparent"></div>
@@ -291,18 +279,14 @@ export default function CourseSection() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ) : (
-                    <motion.div
+                    <div
                       key={idx}
-                      initial={{ opacity: 0, y: 40 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: idx * 0.2 }}
-                      viewport={{ once: false, amount: 0.3 }}
                       className="rounded-xl shadow-lg bg-white dark:bg-gray-800 p-6 flex items-center justify-center"
                     >
                       <img src="/images/common/loading.png" alt="Loading" width={120} height={120} />
-                    </motion.div>
+                    </div>
                   )
                 )
               )}
@@ -311,12 +295,8 @@ export default function CourseSection() {
             <div className="space-y-4">
               {isLoading ? (
                 [...Array(6)].map((_, idx) => (
-                  <motion.div
+                  <div
                     key={idx}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.3 }}
-                    transition={{ duration: 0.6, delay: idx * 0.1 }}
                     className="animate-pulse"
                   >
                     <div className="flex gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
@@ -326,7 +306,7 @@ export default function CourseSection() {
                         <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))
               ) : paginatedCourses.length === 0 ? (
                 <div className="text-center py-12">
@@ -341,31 +321,19 @@ export default function CourseSection() {
               ) : (
                 <>
                   {paginatedCourses.map((course: Course, idx: number) => (
-                    <motion.div
+                    <div
                       key={course.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ 
-                        duration: 0.6, 
-                        delay: idx * 0.1,
-                        ease: "easeOut"
-                      }}
-                      viewport={{ once: false, amount: 0.3 }}
-                      whileHover={{ 
-                        x: 4,
-                        transition: { duration: 0.2 }
-                      }}
                       className="group"
                     >
                       <div 
-                        className="flex gap-4 p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                        className="flex gap-3 sm:gap-4 p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer min-w-0"
                         onClick={() => handleCourseClick(course)}
                       >
                         <div className="relative w-24 h-16 flex-shrink-0 rounded-lg overflow-hidden">
                           <img
                             src={course.image || "/images/common/loading.png"}
                             alt={course.name}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="w-full h-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = "/images/common/loading.png";
@@ -375,10 +343,10 @@ export default function CourseSection() {
 
                         <div className="flex-1 min-w-0">
                           <div className="relative">
-                            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                               {course.title || course.name}
                             </h3>
-                            <div className="absolute left-0 top-full mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
+                            <div className="absolute left-0 top-full mt-1 opacity-0 group-hover:opacity-100 pointer-events-none z-20">
                               <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-pre-line max-w-[80vw] md:max-w-sm relative">
                                 {course.title || course.name}
                                 <div className="absolute left-4 -top-2 border-b-8 border-b-gray-900 dark:border-b-gray-100 border-x-8 border-x-transparent"></div>
@@ -399,7 +367,7 @@ export default function CourseSection() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                   
                   {totalPages > 1 && (

@@ -96,28 +96,10 @@ export default function CourseModal({ course, courses = [], initialIndex = 0, is
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{
-              opacity: 0,
-              scaleX: 0,
-              filter: "blur(12px)",
-              transformOrigin: "right",
-          }}
-          animate={{
-              opacity: 1,
-              scaleX: 1,
-              filter: "blur(0px)",
-              transformOrigin: "right",
-          }}
-          exit={{
-              opacity: 0,
-              scaleX: 0,
-              filter: "blur(12px)",
-              transformOrigin: "right",
-          }}
-          transition={{
-              duration: 0.6,
-              ease: [0.25, 1, 0.5, 1],
-          }}
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0 }}
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={onClose}
           onKeyDown={(e) => {
@@ -130,10 +112,10 @@ export default function CourseModal({ course, courses = [], initialIndex = 0, is
           aria-labelledby="modal-title"
         >
           <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            initial={{ scale: 1, opacity: 1, y: 0 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 20 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0 }}
             className="relative w-full max-w-4xl max-h-[95vh] overflow-y-auto transparent-scrollbar"
             onClick={(e) => e.stopPropagation()}
           >
@@ -144,10 +126,10 @@ export default function CourseModal({ course, courses = [], initialIndex = 0, is
                     <AnimatePresence mode="wait">
                       <motion.img
                         key={currentCourse.id}
-                        initial={{ opacity: 0, x: 50 }}
+                        initial={{ opacity: 1, x: 0 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        transition={{ duration: 0.3 }}
+                        exit={{ opacity: 0, x: -30 }}
+                        transition={{ duration: 0 }}
                         src={currentCourse.image || "/images/common/loading.png"}
                         alt={currentCourse.title || currentCourse.name}
                         className="w-full h-full object-cover"
@@ -185,10 +167,10 @@ export default function CourseModal({ course, courses = [], initialIndex = 0, is
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={currentCourse.id}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 1, y: 0 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0 }}
                       >
                         <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
                           {currentCourse.name}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, Users, Menu, X, Home, LogOut, Cpu, Info, UserPlus, Gift } from "lucide-react";
+import { FileText, Users, Menu, X, Home, LogOut, Cpu, Info, UserPlus, Gift, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "~/hooks/useUser";
 import { useEffect } from "react";
@@ -35,6 +35,11 @@ function UserAvatar({ user }: { user: any }) {
 }
 
 const adminNavItems = [
+  {
+    title: "Landing",
+    href: "/admin/landing",
+    icon: LayoutDashboard,
+  },
   {
     title: "Posts",
     href: "/admin/posts",

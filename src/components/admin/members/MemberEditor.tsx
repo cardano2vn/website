@@ -33,7 +33,9 @@ export default function MemberEditor({ member, onSave, onCancel, isLoading }: Me
       const res = await fetch('/api/admin/tabs');
       if (!res.ok) throw new Error('Failed to fetch tabs');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const tabs: Tab[] = tabsData?.data || [];

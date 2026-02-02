@@ -30,7 +30,9 @@ export default function TechnologyEditor({ technology, onSave, onCancel }: Techn
       const res = await fetch('/api/admin/feature-cards', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch feature cards');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const featureCards: FeatureCard[] = featureCardsData?.data || [];

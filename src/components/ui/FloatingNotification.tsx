@@ -22,28 +22,28 @@ export default function FloatingNotification({ children }: FloatingNotificationP
     queryKey: ['welcome-modal'],
     queryFn: async () => {
       const response = await fetch('/api/welcome-modal');
-      if (!response.ok) {
-        return null;
-      }
+      if (!response.ok) return null;
       return response.json();
-    }
+    },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   const { data: userData } = useQuery({
     queryKey: ['user-role'],
     queryFn: async () => {
       if (!session?.user) return null;
-
       const sessionUser = session.user as { address?: string; email?: string };
       const url = new URL('/api/user', window.location.origin);
       if (sessionUser.address) url.searchParams.set('address', sessionUser.address);
       if (sessionUser.email) url.searchParams.set('email', sessionUser.email);
-
       const response = await fetch(url.toString());
       if (!response.ok) return null;
       return response.json();
     },
     enabled: !!session?.user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   useEffect(() => {

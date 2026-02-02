@@ -36,7 +36,9 @@ export default function ProjectsPageClient() {
       const res = await fetch('/api/admin/projects', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch projects');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const projects: Project[] = queryData?.data || [];

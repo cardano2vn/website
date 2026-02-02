@@ -72,36 +72,23 @@ export default function MemberModal({ member, members = [], initialIndex = 0, is
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{
-            opacity: 0,
-            scaleX: 0,
-            filter: "blur(12px)",
-            transformOrigin: "right",
-          }}
-          animate={{
-            opacity: 1,
-            scaleX: 1,
-            filter: "blur(0px)",
-            transformOrigin: "right",
-          }}
+          initial={{ opacity: 1, scaleX: 1, filter: "blur(0px)", transformOrigin: "right" }}
+          animate={{ opacity: 1, scaleX: 1, filter: "blur(0px)", transformOrigin: "right" }}
           exit={{
             opacity: 0,
             scaleX: 0,
             filter: "blur(12px)",
             transformOrigin: "right",
           }}
-          transition={{
-            duration: 0.6,
-            ease: [0.25, 1, 0.5, 1],
-          }}
+          transition={{ duration: 0, ease: [0.25, 1, 0.5, 1] }}
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={onClose}
         >
           <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            initial={{ scale: 1, opacity: 1, y: 0 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 20 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0, ease: "easeOut" }}
             className="relative w-full max-w-4xl max-h-[95vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >

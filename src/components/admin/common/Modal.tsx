@@ -27,9 +27,10 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0 }}
           className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
           onClick={onClose}
           onKeyDown={(e) => {
@@ -42,10 +43,10 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
           aria-labelledby="modal-title"
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            initial={{ scale: 1, opacity: 1, y: 0 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            transition={{ duration: 0, ease: "easeOut" }}
             className={`relative w-full ${maxWidth} max-h-[90vh] overflow-hidden`}
             onClick={e => e.stopPropagation()}
           >

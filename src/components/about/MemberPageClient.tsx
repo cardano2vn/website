@@ -6,6 +6,7 @@ import Title from "~/components/title";
 import AboutSection from "~/components/project/AboutSection";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useToastContext } from "~/components/toast-provider";
@@ -241,6 +242,8 @@ export default function MemberPageClient() {
       }
       return response.json();
     },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -258,6 +261,8 @@ export default function MemberPageClient() {
       }
       return response.json();
     },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   // Redirect to 404 if tabs data fails to load
@@ -367,8 +372,10 @@ export default function MemberPageClient() {
   }, [totalPages]); 
 
   const handleMemberClick = (member: MemberType) => {
-    setSelectedMember(member);
-    setIsModalOpen(true);
+    flushSync(() => {
+      setSelectedMember(member);
+      setIsModalOpen(true);
+    });
   };
 
   const handleCloseModal = () => {

@@ -21,11 +21,11 @@ export default function TechnologyPageClient({ isEmbedded = false, searchTerm = 
     queryKey: ['project-public'],
     queryFn: async () => {
       const response = await fetch('/api/project');
-      if (!response.ok) {
-        throw new Error('Failed to fetch projects');
-      }
+      if (!response.ok) throw new Error('Failed to fetch projects');
       return response.json();
-    }
+    },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function TechnologyPageClient({ isEmbedded = false, searchTerm = 
   }
 
   return (
-    <main className="relative pt-20 bg-white dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-950 dark:to-gray-900">
+    <main className="relative pt-20 bg-white dark:bg-gray-950">
       <BackgroundMotion />
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
         <div className="pb-20">

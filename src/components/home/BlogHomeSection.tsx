@@ -6,7 +6,6 @@
 import { useEffect, useState } from "react";
 // import Blog from "~/components/blog";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import StarIcon from "~/components/ui/StarIcon";
 
@@ -28,6 +27,8 @@ export default function ProtocolSection() {
       const data = await res.json();
       return data?.data || [];
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -69,9 +70,9 @@ export default function ProtocolSection() {
   };
 
   return (
-    <section id="protocol" className="relative flex min-h-[80vh] items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40">
-      <section className="mx-auto w-5/6 max-w-screen-2xl px-6 py-12 lg:px-8">
-        <div className="relative">
+    <section id="protocol" className="relative flex min-h-[80vh] items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-x-hidden">
+      <section className="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="relative min-w-0">
           <div className="mb-8">
             <div className="mb-4 flex items-center gap-4">
               <StarIcon size="lg" className="w-16 h-16" />
@@ -129,12 +130,8 @@ export default function ProtocolSection() {
           <div className="space-y-4">
             {isLoading ? (
               [...Array(3)].map((_, idx) => (
-                <motion.div
+                <div
                   key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.3 }}
-                  transition={{ duration: 0.6, delay: idx * 0.1 }}
                   className="animate-pulse"
                 >
                   <div className="flex gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
@@ -144,30 +141,18 @@ export default function ProtocolSection() {
                       <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))
             ) : (
               displayBlogs.map((post, idx) =>
                 post ? (
-                  <motion.div
+                  <div
                     key={post.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ 
-                      duration: 0.6, 
-                      delay: idx * 0.1,
-                      ease: "easeOut"
-                    }}
-                    viewport={{ once: false, amount: 0.3 }}
-                    whileHover={{ 
-                      x: 4,
-                      transition: { duration: 0.2 }
-                    }}
                     className="group"
                   >
                     <Link 
                       href={`/blog/${post.slug || post.id}`}
-                      className="flex gap-4 p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                      className="flex gap-4 p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                       onClick={() => {
                         const pid = post.slug || post.id;
                         try {
@@ -185,7 +170,7 @@ export default function ProtocolSection() {
                         <img
                           alt={post.title}
                           loading="lazy"
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="w-full h-full object-cover"
                           src={(() => {
                             const media = post.media?.[0];
                             if (media && typeof media.url === 'string' && media.url) {
@@ -209,11 +194,11 @@ export default function ProtocolSection() {
                         {/* Title with tooltip */}
                         <div className="relative group">
                           <h3
-                            className="text-base font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+                            className="text-base font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                           >
                             {post.title}
                           </h3>
-                          <div className="absolute left-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
+                          <div className="absolute left-0 top-full mt-2 opacity-0 group-hover:opacity-100 pointer-events-none z-20">
                             <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs px-3 py-2 rounded-lg shadow-lg whitespace-pre-line max-w-[80vw] md:max-w-xl relative">
                               {post.title}
                               <div className="absolute left-4 -top-2 border-b-8 border-b-gray-900 dark:border-b-gray-100 border-x-8 border-x-transparent"></div>
@@ -222,8 +207,8 @@ export default function ProtocolSection() {
                         </div>
 
                         {/* Meta */}
-                        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-sm text-gray-500 dark:text-gray-400 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 min-w-0">
                             <span>
                               {new Date(post.createdAt).toLocaleDateString("en-GB", {
                                 day: "2-digit",
@@ -244,43 +229,39 @@ export default function ProtocolSection() {
                             )}
                             {Array.isArray(post.tags) && post.tags.length > 0 && (
                               <>
-                                <span>•</span>
-                                <span className="flex items-center gap-1">
+                                <span className="shrink-0">•</span>
+                                <span className="flex flex-wrap items-center gap-1 min-w-0">
                                   {post.tags.slice(0, 2).map((tag: any, i: number) => {
                                     const name = typeof tag === 'string' ? tag : (tag?.name || '');
                                     if (!name) return null;
                                     return (
                                       <span
                                         key={i}
-                                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 shrink-0"
                                       >
                                         {name}
                                       </span>
                                     );
                                   })}
                                   {post.tags.length > 2 && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">+{post.tags.length - 2}</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">+{post.tags.length - 2}</span>
                                   )}
                                 </span>
                               </>
                             )}
                           </div>
-                          <span className="ml-4 truncate max-w-[40%] text-right">{post.author || "Admin"}</span>
+                          <span className="shrink-0 truncate max-w-[40%] text-right">{post.author || "Admin"}</span>
                         </div>
                       </div>
                     </Link>
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div
+                  <div
                     key={idx}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: idx * 0.1 }}
-                    viewport={{ once: false, amount: 0.3 }}
                     className="flex gap-4 p-4 border-b border-gray-200 dark:border-gray-700 items-center justify-center"
                   >
                     <img src="/images/common/loading.png" alt="Loading" width={60} height={40} />
-                  </motion.div>
+                  </div>
                 )
               )
             )}

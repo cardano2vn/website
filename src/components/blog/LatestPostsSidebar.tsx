@@ -40,7 +40,8 @@ export default function LatestPostsSidebar({ currentPostSlug }: LatestPostsSideb
       if (!res.ok) throw new Error('Failed to fetch latest posts');
       return res.json();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const latestPosts: LatestPost[] = postsData?.data || [];

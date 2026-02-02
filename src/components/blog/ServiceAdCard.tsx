@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import WalletPickerModal from "~/components/our-service/WalletPickerModal";
 import { useToastContext } from "~/components/toast-provider";
-import { Lucid, Blockfrost } from "lucid-cardano";
 import * as CardanoWasm from "@emurgo/cardano-serialization-lib-asmjs";
 import { cardanoWallet } from "~/lib/cardano-wallet";
 
@@ -166,7 +165,7 @@ export default function ServiceAdCard({
     try {
       const walletProvider = getSelectedWalletProvider(preferredKey);
       const walletApi = await walletProvider.enable();
-      
+      const { Lucid, Blockfrost } = await import("lucid-cardano");
       const lucid = await Lucid.new(
         new Blockfrost(`${window.location.origin}${BLOCKFROST_PROXY}`, "proxy"),
         "Mainnet"

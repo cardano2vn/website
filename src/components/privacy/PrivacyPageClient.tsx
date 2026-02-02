@@ -9,7 +9,7 @@ export default function PrivacyPageClient() {
   useNotifications();
   
   return (
-    <main className="relative pt-20 bg-white dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-950 dark:to-gray-900">
+    <main className="relative pt-20 bg-white dark:bg-gray-950">
       <BackgroundMotion />
       <div className="mx-auto max-w-4xl px-6 py-20 lg:px-8">
         <motion.div

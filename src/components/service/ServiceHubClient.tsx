@@ -31,7 +31,7 @@ const cards = [
 
 export default function ServiceHubClient() {
   return (
-    <main className="relative pt-20 bg-white dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-950 dark:to-gray-900 min-h-screen">
+    <main className="relative pt-20 bg-white dark:bg-gray-950 min-h-screen">
       <BackgroundMotion />
       <section className="relative z-10 mx-auto max-w-7xl px-6 py-20 lg:px-8">
         <motion.div

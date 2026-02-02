@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "~/app/api/auth/[...nextauth]/route";
 import { prisma } from "~/lib/prisma";
@@ -13,32 +14,34 @@ export interface AuthUser {
   };
 }
 
-export async function getCurrentUser(): Promise<AuthUser | null> {
+async function getCurrentUserUncached(): Promise<AuthUser | null> {
   try {
     const session = await getServerSession(authOptions);
-    
     if (!session?.user) return null;
 
     const sessionUser = session.user as { address?: string; email?: string };
-    
-    let user = null;
     if (sessionUser.address) {
-      user = await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { wallet: sessionUser.address },
-        include: { role: true }
+        select: { id: true, name: true, email: true, wallet: true, image: true, role: { select: { name: true } } },
       });
-    } else if (sessionUser.email) {
-      user = await prisma.user.findUnique({
-        where: { email: sessionUser.email },
-        include: { role: true }
-      });
+      return user as AuthUser | null;
     }
-
-    return user;
-  } catch (error) {
+    if (sessionUser.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: sessionUser.email },
+        select: { id: true, name: true, email: true, wallet: true, image: true, role: { select: { name: true } } },
+      });
+      return user as AuthUser | null;
+    }
+    return null;
+  } catch {
     return null;
   }
 }
+
+/** Deduped per-request: same request only hits session + DB once. */
+export const getCurrentUser = cache(getCurrentUserUncached);
 
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getCurrentUser();

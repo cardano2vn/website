@@ -722,6 +722,26 @@ export default function Header() {
               );
             })}
 
+            {!session && (
+              <Link
+                href={routers.login}
+                className={`font-medium transition-colors duration-200 relative ${
+                  isActiveNav(routers.login) ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                Login
+                {isActiveNav(routers.login) && (
+                  <motion.div
+                    layoutId="activeNav"
+                    className="absolute -bottom-2 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                )}
+              </Link>
+            )}
+
             {session && isAdmin && (
               <Link
                 href="/admin/posts"
@@ -759,25 +779,6 @@ export default function Header() {
              )}
           </section>
 
-          {!session && (
-            <section>
-              <Link
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-sm border border-white/30 bg-gray-800/50 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-200 hover:border-white/50 hover:bg-gray-700/50"
-                href={routers.login}
-              >
-                <span>Login</span>
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  ></path>
-                </svg>
-              </Link>
-            </section>
-          )}
 
           <section className="md:hidden">
             <button
@@ -814,18 +815,17 @@ export default function Header() {
                     </Link>
                   );
                 })}
-                <div className="py-2">
-                  {/* <Link
-                    href={navbar.href}
-                    key={navbar.id}
+                {!session && (
+                  <Link
+                    href={routers.login}
                     onClick={closeMenu}
                     className={`block font-medium transition-colors duration-200 py-2 ${
-                      isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                      isActiveNav(routers.login) ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                     }`}
                   >
-                    {navbar.title}
-                  </Link> */}
-                </div>
+                    Login
+                  </Link>
+                )}
               </div>
 
               <div className="space-y-4">

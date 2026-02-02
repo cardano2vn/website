@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import WalletPickerModal from "~/components/our-service/WalletPickerModal";
 import DrepCard from "~/components/our-service/DrepCard";
 import PoolCard from "~/components/our-service/PoolCard";
 import DelegateList from "~/components/our-service/DelegateList";
 import { useToastContext } from "~/components/toast-provider";
-import { Lucid, Blockfrost } from "lucid-cardano";
 import * as CardanoWasm from "@emurgo/cardano-serialization-lib-asmjs";
 import { cardanoWallet } from "~/lib/cardano-wallet";
 
@@ -17,6 +17,8 @@ const DREP_BECH32 =
 const VILAI_POOL = "pool1u7zrgexnxsysctnnwljjjymr70he829fr5n3vefnv80guxr42dv";
 const HADA_POOL = "pool1rqgf6qd0p3wyf9dxf2w7qcddvgg4vu56l35ez2xqemhqun2gn7y";
 
+const BLOCKFROST_STALE_MS = 7 * 24 * 60 * 60 * 1000;
+
 type PoolInfo = {
   ticker: string;
   delegators: number | null;
@@ -25,110 +27,86 @@ type PoolInfo = {
   pledge: string | null;
 };
 
-
 export default function ServiceContent() {
   const { showSuccess, showError, showInfo } = useToastContext();
-  const [loading, setLoading] = React.useState(true);
-  const [drepStatus, setDrepStatus] = React.useState<string>("Not registered");
-  const [votingPower, setVotingPower] = React.useState<string>("0 ₳");
-  const [pools, setPools] = React.useState<Record<string, PoolInfo>>({});
-  const [error, setError] = React.useState<string | null>(null);
   const [walletPicker, setWalletPicker] = React.useState<{
     open: boolean;
     action: null | { type: "drep"; id: string } | { type: "pool"; id: string };
   }>({ open: false, action: null });
+
+  const drepQuery = useQuery({
+    queryKey: ["blockfrost", "drep", DREP_BECH32],
+    queryFn: async () => {
+      const res = await fetch(`${BLOCKFROST_PROXY}/governance/dreps/${DREP_BECH32}`);
+      if (!res.ok) throw new Error(`DRep HTTP ${res.status}`);
+      return res.json() as Promise<{ active?: boolean; retired?: boolean; expired?: boolean; amount?: string | number }>;
+    },
+    staleTime: BLOCKFROST_STALE_MS,
+    gcTime: 10 * 60 * 60 * 1000,
+  });
+
+  const vilaiQuery = useQuery({
+    queryKey: ["blockfrost", "pool", VILAI_POOL],
+    queryFn: async () => {
+      const res = await fetch(`${BLOCKFROST_PROXY}/pools/${VILAI_POOL}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: BLOCKFROST_STALE_MS,
+    gcTime: 10 * 60 * 60 * 1000,
+  });
+
+  const hadaQuery = useQuery({
+    queryKey: ["blockfrost", "pool", HADA_POOL],
+    queryFn: async () => {
+      const res = await fetch(`${BLOCKFROST_PROXY}/pools/${HADA_POOL}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: BLOCKFROST_STALE_MS,
+    gcTime: 10 * 60 * 60 * 1000,
+  });
+
+  const loading = drepQuery.isLoading || vilaiQuery.isLoading || hadaQuery.isLoading;
+  const error = drepQuery.error ? (drepQuery.error as Error).message : (vilaiQuery.error || hadaQuery.error) ? String(vilaiQuery.error || hadaQuery.error) : null;
+  const drepJson = drepQuery.data;
+  const drepStatus =
+    !drepJson ? "Not registered"
+    : drepJson.active ? "Active"
+    : drepJson.retired ? "Retired"
+    : drepJson.expired ? "Expired"
+    : "Inactive";
+  const votingPower =
+    drepJson?.amount != null
+      ? (() => {
+          const vpNum = Number(drepJson.amount) / 1_000_000;
+          return Number.isFinite(vpNum) ? `${vpNum.toLocaleString()} ₳` : String(drepJson.amount);
+        })()
+      : "0 ₳";
+  const vilaiInfo = vilaiQuery.data;
+  const hadaInfo = hadaQuery.data;
+  const pools: Record<string, PoolInfo> = {
+    [VILAI_POOL]: {
+      ticker: "VILAI",
+      delegators: vilaiInfo?.live_delegators ?? 0,
+      blocks: vilaiInfo?.blocks_minted ?? 0,
+      stake: vilaiInfo?.live_stake ? `${(Number(vilaiInfo.live_stake) / 1_000_000).toLocaleString()} ₳` : null,
+      pledge: vilaiInfo?.live_pledge ? `${(Number(vilaiInfo.live_pledge) / 1_000_000).toLocaleString()} ₳` : null,
+    },
+    [HADA_POOL]: {
+      ticker: "HADA",
+      delegators: hadaInfo?.live_delegators ?? 0,
+      blocks: hadaInfo?.blocks_minted ?? 0,
+      stake: hadaInfo?.live_stake ? `${(Number(hadaInfo.live_stake) / 1_000_000).toLocaleString()} ₳` : null,
+      pledge: hadaInfo?.live_pledge ? `${(Number(hadaInfo.live_pledge) / 1_000_000).toLocaleString()} ₳` : null,
+    },
+  };
 
   function isWalletInstalledByKey(key: string): boolean {
     const injected: any = (typeof window !== "undefined" && (window as any).cardano) || null;
     if (!injected) return false;
     return Object.keys(injected).some((k) => k.toLowerCase() === key.toLowerCase());
   }
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // ================= DRep via Blockfrost =================
-        const drepEndpoint = `${BLOCKFROST_PROXY}/governance/dreps/${DREP_BECH32}`;
-        const drepResp = await fetch(drepEndpoint);
-        const contentType = drepResp.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
-          const drepJson = await drepResp.json();
-          if (!drepResp.ok) {
-            throw new Error(`DRep HTTP ${drepResp.status}`);
-          }
-          if (drepJson && typeof drepJson === "object") {
-            if (drepJson.active) {
-              setDrepStatus("Active");
-            } else if (drepJson.retired) {
-              setDrepStatus("Retired");
-            } else if (drepJson.expired) {
-              setDrepStatus("Expired");
-            } else {
-              setDrepStatus("Inactive");
-            }
-
-            if (drepJson.amount != null) {
-              const vpNum = Number(drepJson.amount) / 1_000_000;
-              if (Number.isFinite(vpNum)) {
-                setVotingPower(`${vpNum.toLocaleString()} ₳`);
-              } else {
-                setVotingPower(String(drepJson.amount));
-              }
-            }
-          }
-        } else {
-          const _text = await drepResp.text();
-          if (!drepResp.ok) throw new Error(`DRep HTTP ${drepResp.status}`);
-        }
-
-        async function getPoolInfo(poolId: string) {
-          const res = await fetch(`${BLOCKFROST_PROXY}/pools/${poolId}`);
-          if (!res.ok) {
-            return null;
-          }
-          const data = await res.json();
-          return data;
-        }
-
-        const vilaiInfo = await getPoolInfo(VILAI_POOL);
-        const hadaInfo = await getPoolInfo(HADA_POOL);
-
-        setPools({
-          [VILAI_POOL]: {
-            ticker: "VILAI",
-            delegators: vilaiInfo?.live_delegators ?? 0,
-            blocks: vilaiInfo?.blocks_minted ?? 0,
-            stake: vilaiInfo?.live_stake
-              ? `${(Number(vilaiInfo.live_stake) / 1_000_000).toLocaleString()} ₳`
-              : null,
-            pledge: vilaiInfo?.live_pledge
-              ? `${(Number(vilaiInfo.live_pledge) / 1_000_000).toLocaleString()} ₳`
-              : null,
-          },
-          [HADA_POOL]: {
-            ticker: "HADA",
-            delegators: hadaInfo?.live_delegators ?? 0,
-            blocks: hadaInfo?.blocks_minted ?? 0,
-            stake: hadaInfo?.live_stake
-              ? `${(Number(hadaInfo.live_stake) / 1_000_000).toLocaleString()} ₳`
-              : null,
-            pledge: hadaInfo?.live_pledge
-              ? `${(Number(hadaInfo.live_pledge) / 1_000_000).toLocaleString()} ₳`
-              : null,
-          },
-        });
-      } catch (e) {
-        setError((e as Error).message);
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   function getSelectedWalletProvider(preferredKey?: string): any {
     const injected: any =
@@ -275,27 +253,8 @@ export default function ServiceContent() {
     try {
       const walletProvider = getSelectedWalletProvider(preferredKey);
       const walletApi = await walletProvider.enable();
-      // const { Lucid, Blockfrost } = await import("lucid-cardano");
-      const lucid = await Lucid.new(
-        new Blockfrost(`${window.location.origin}${BLOCKFROST_PROXY}`, "proxy"),
-        "Mainnet"
-      );
-
-      lucid.selectWallet(walletApi);
-
-      const rewardAddress = await lucid.wallet.rewardAddress();
-      if (!rewardAddress) {
-        throw new Error("Wallet has no reward address (no staking key). Please use a staking-capable account.");
-      }
-
-      const tx = await lucid
-        .newTx()
-        .delegateTo(rewardAddress, poolId)
-        .complete();
-
-      const signedTx = await tx.sign().complete();
-      const txHash = await signedTx.submit();
-
+      const { runDelegateToPool } = await import("./delegateToPoolAction");
+      const { txHash } = await runDelegateToPool(BLOCKFROST_PROXY, walletApi, poolId);
       showSuccess("Delegated to pool", `Pool: ${poolId}\nTx: ${txHash}`);
     } catch (err) {
       const error = err as Error;

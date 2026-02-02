@@ -23,7 +23,9 @@ export function useMediaData() {
       const response = await fetch('/api/admin/media');
       if (!response.ok) throw new Error('Failed to fetch media');
       return response.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const media = queryData?.data?.media || [];

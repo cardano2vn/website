@@ -40,11 +40,11 @@ export default function LandingLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-950 dark:to-gray-900 text-gray-900 dark:text-white relative">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white relative overflow-x-hidden w-full max-w-full">
         {/* <LightBulbScene /> */}
         <Header />
-        <div>{children}</div>
+        <div className="overflow-x-hidden w-full max-w-full pt-20">{children}</div>
         <Footer />
         <BackToTop />
         <BackToBottom />

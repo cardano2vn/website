@@ -48,7 +48,9 @@ export default function AboutEditor({ onSave, onCancel, isLoading }: AboutEditor
       const res = await fetch('/api/admin/about', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch about data');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   useEffect(() => {

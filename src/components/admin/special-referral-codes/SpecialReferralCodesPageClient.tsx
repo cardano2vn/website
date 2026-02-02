@@ -62,7 +62,9 @@ export function SpecialReferralCodesPageClient({ initialCodes = [] }: SpecialRef
       const res = await fetch(`/api/admin/special-referral-codes?${params}`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch special referral codes');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const {
@@ -74,7 +76,9 @@ export function SpecialReferralCodesPageClient({ initialCodes = [] }: SpecialRef
       const res = await fetch('/api/admin/special-referral-codes/stats', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch stats');
       return res.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const codes = queryData?.data?.codes || [];

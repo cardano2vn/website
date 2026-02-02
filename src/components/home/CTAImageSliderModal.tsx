@@ -1,9 +1,8 @@
 "use client";
 
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface CTAImageSliderModalProps {
   isOpen: boolean;
@@ -26,6 +25,8 @@ export default function CTAImageSliderModal({
 }: CTAImageSliderModalProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
+  const spinnerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const eventsWithImages = events.filter(event => event.imageUrl && event.imageUrl.trim() !== "");
 
@@ -33,6 +34,7 @@ export default function CTAImageSliderModal({
     if (isOpen) {
       setCurrentIndex(initialIndex);
       setIsLoading(false);
+      setShowSpinner(false);
     }
   }, [isOpen, initialIndex]);
 
@@ -78,16 +80,37 @@ export default function CTAImageSliderModal({
 
   const currentEvent = eventsWithImages[currentIndex];
 
+  const handleLoadStart = () => {
+    if (spinnerTimeoutRef.current) clearTimeout(spinnerTimeoutRef.current);
+    setIsLoading(true);
+    spinnerTimeoutRef.current = setTimeout(() => setShowSpinner(true), 80);
+  };
+
+  const handleLoad = () => {
+    if (spinnerTimeoutRef.current) {
+      clearTimeout(spinnerTimeoutRef.current);
+      spinnerTimeoutRef.current = null;
+    }
+    setIsLoading(false);
+    setShowSpinner(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (spinnerTimeoutRef.current) clearTimeout(spinnerTimeoutRef.current);
+    };
+  }, []);
+
   if (eventsWithImages.length === 0) {
     return (
       <Transition appear show={isOpen} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={onClose}>
           <Transition.Child
             as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
+            enter="ease-out duration-0"
+            enterFrom="opacity-100"
             enterTo="opacity-100"
-            leave="ease-in duration-200"
+            leave="ease-in duration-150"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
@@ -98,10 +121,10 @@ export default function CTAImageSliderModal({
             <div className="flex min-h-full items-center justify-center p-4">
               <Transition.Child
                 as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
+                enter="ease-out duration-0"
+                enterFrom="opacity-100 scale-100"
                 enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
+                leave="ease-in duration-150"
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
@@ -130,10 +153,10 @@ export default function CTAImageSliderModal({
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         <Transition.Child
           as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
+          enter="ease-out duration-0"
+          enterFrom="opacity-100"
           enterTo="opacity-100"
-          leave="ease-in duration-200"
+          leave="ease-in duration-150"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
@@ -144,19 +167,16 @@ export default function CTAImageSliderModal({
           <div className="flex min-h-full items-center justify-center p-4">
             <Transition.Child
               as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
+              enter="ease-out duration-0"
+              enterFrom="opacity-100 scale-100"
               enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
+              leave="ease-in duration-150"
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl transition-all">
                 {/* Close Button */}
-                <motion.button
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3, duration: 0.3 }}
+                <button
                   onClick={onClose}
                   className="absolute top-4 right-4 z-10 button"
                   title="Close gallery"
@@ -167,7 +187,6 @@ export default function CTAImageSliderModal({
                     border: "none",
                     background: "rgba(180, 83, 107, 0.11)",
                     borderRadius: "5px",
-                    transition: "background 0.5s",
                     zIndex: 50,
                   }}
                 >
@@ -221,33 +240,24 @@ export default function CTAImageSliderModal({
                   >
                     Close
                   </div>
-                </motion.button>
+                </button>
 
                 {/* Image Container */}
                 <div className="relative">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentIndex}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3 }}
-                      className="relative"
-                    >
-                      <img
-                        src={currentEvent?.imageUrl}
-                        alt={currentEvent?.title || "Event image"}
-                        className="w-full h-[60vh] max-h-[500px] object-cover"
-                        onLoad={() => setIsLoading(false)}
-                        onLoadStart={() => setIsLoading(true)}
-                      />
-                      {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        </div>
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
+                  <div className="relative">
+                    <img
+                      src={currentEvent?.imageUrl}
+                      alt={currentEvent?.title || "Event image"}
+                      className="w-full h-[60vh] max-h-[500px] object-cover"
+                      onLoad={handleLoad}
+                      onLoadStart={handleLoadStart}
+                    />
+                    {showSpinner && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Navigation Arrows */}
                   {eventsWithImages.length > 1 && (
