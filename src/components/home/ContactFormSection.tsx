@@ -2,15 +2,27 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { ImageModal } from '~/components/ui/ImageModal';
 import { useToastContext } from '~/components/toast-provider';
-import { ContactForm } from './ContactForm';
 import { ContactFormData, FormErrors } from '~/constants/contact';
 import { useDeviceFingerprint } from '~/hooks/useDeviceFingerprint';
-import ContactFormImage from './ContactFormImage';
-import ContactFormSkeleton from './ContactFormSkeleton';
 import { useQuery } from '@tanstack/react-query';
 import StarIcon from "~/components/ui/StarIcon";
 import BannedForm from "~/components/BannedForm";
+import { ContactForm } from "./ContactForm";
+
+const REFERRAL_ERR: Record<string, { msg: string; key: string }> = {
+  REFERRAL_NOT_FOUND: { msg: 'Referral Code Not Found', key: 'Referral code not found' },
+  INVALID_REFERRAL_CODE: { msg: 'Invalid Referral Code Format', key: 'Invalid referral code format' },
+  CODE_INACTIVE: { msg: 'Special Code Inactive', key: 'Special code is inactive' },
+  CODE_EXPIRED: { msg: 'Special Code Expired', key: 'Special code has expired' },
+  CANNOT_USE_OWN_CODE: { msg: 'Cannot Use Own Code', key: 'Cannot use your own referral code' },
+};
+
+function scrollToContact() {
+  const el = document.getElementById('contact');
+  if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 100, behavior: 'smooth' });
+}
 
 export default function ContactFormSection() {
   const { data: session } = useSession();
@@ -39,37 +51,11 @@ export default function ContactFormSection() {
   const [referralCodeLocked, setReferralCodeLocked] = useState(false);
   const [isDeviceBanned, setIsDeviceBanned] = useState(false);
   const [banDetails, setBanDetails] = useState<any>(null);
-  
-  const { deviceData, isLoading: fingerprintLoading } = useDeviceFingerprint(); 
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      console.log('Hash changed:', hash);
-      
-      const match = hash.match(/#contact(?:#|&)code=([^#&]+)/i);
-      if (match && match[1]) {
-        const referralCode = decodeURIComponent(match[1]);
-        
-        setFormData(prev => ({
-          ...prev,
-          "email-intro": referralCode
-        }));
-        
-        if (deviceData) {
-          validateReferralCodeFromUrl(referralCode);
-        }
-      }
-    };
-
-    handleHashChange();
-    
-    window.addEventListener('hashchange', handleHashChange);
-    
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, [deviceData]);
+  const { deviceData } = useDeviceFingerprint();
+  const emailValid = (formData["your-email"] || '').trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((formData["your-email"] || '').trim());
+  const nameValid = (formData["your-name"] || '').trim().length > 0;
 
   useEffect(() => {
     const checkBanStatus = async () => {
@@ -95,59 +81,6 @@ export default function ContactFormSection() {
 
     checkBanStatus();
   }, [deviceData]);
- 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const handleReferralCode = () => {
-      const url = new URL(window.location.href);
-      const hash = url.hash?.slice(1); 
-      if (hash && hash.startsWith('contact')) {
-        const codeMatch = hash.match(/contact#code=([^#&]+)/);
-        
-        if (codeMatch && codeMatch[1]) {
-          const referralCode = codeMatch[1].trim();
-          
-         
-          setFormData(prev => ({
-            ...prev,
-            "email-intro": referralCode
-          }));
-          
-          
-          setTimeout(() => {
-            const contactElement = document.getElementById('contact');
-            if (contactElement) {
-              const headerOffset = 100;
-              const y = contactElement.getBoundingClientRect().top + window.pageYOffset - headerOffset;
-              window.scrollTo({ top: y, behavior: 'smooth' });
-            }
-          }, 100);
-        } else {
-         
-          setTimeout(() => {
-            const contactElement = document.getElementById('contact');
-            if (contactElement) {
-              const headerOffset = 100;
-              const y = contactElement.getBoundingClientRect().top + window.pageYOffset - headerOffset;
-              window.scrollTo({ top: y, behavior: 'smooth' });
-            }
-          }, 100);
-        }
-      }
-    };
-    
-    
-    handleReferralCode();
-    
-    
-    const handleHashChange = () => {
-      handleReferralCode();
-    };
-    
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -196,7 +129,7 @@ export default function ContactFormSection() {
     fetchUserData();
   }, [session]);
 
-  const { data: courses = [], isLoading: coursesLoading, error: coursesError } = useQuery({
+  const { data: courses = [], error: coursesError } = useQuery({
     queryKey: ['contact-form-courses'],
     queryFn: async () => {
       try {
@@ -212,8 +145,6 @@ export default function ContactFormSection() {
     gcTime: 10 * 60 * 1000, 
     refetchOnWindowFocus: false,
   });
-
-
 
   useEffect(() => {
     if (courses.length > 0 && !selectedCourse && formData["your-course"]) {
@@ -248,105 +179,66 @@ export default function ContactFormSection() {
   }, []);
 
   const clearReferralCode = useCallback(() => {
-    setFormData(prev => ({
-      ...prev,
-      "email-intro": ""
-    }));
-    setErrors(prev => ({
-      ...prev,
-      "email-intro": undefined
-    }));
+    setFormData(prev => ({ ...prev, "email-intro": "" }));
+    setErrors(prev => ({ ...prev, "email-intro": undefined }));
     setReferralCodeValid(false);
     setReferralCodeLocked(false);
   }, []);
 
-  const validateReferralCodeFromUrl = useCallback(async (referralCode: string) => {
-    if (!referralCode || !deviceData) return;
-    
+  const applyReferralResult = useCallback((result: any, ok: boolean, doClear?: boolean) => {
+    if (ok) {
+      if (result.data?.fingerprint) localStorage.setItem('deviceFingerprint', result.data.fingerprint);
+      setReferralCodeValid(true);
+      setReferralCodeLocked(true);
+      setErrors(prev => ({ ...prev, "email-intro": undefined }));
+      showSuccess(result.data?.isSpecial ? 'Special Referral Code Validated' : 'Referral Code Validated', result.data?.isSpecial ? 'Special referral code is valid and can be used!' : `Referral code from ${result.data?.referrerName || 'user'} is valid!`);
+    } else {
+      setReferralCodeValid(false);
+      setReferralCodeLocked(false);
+      if (doClear) clearReferralCode();
+      const e = REFERRAL_ERR[result.code] || { msg: 'Referral Code Validation Failed', key: 'Referral code validation failed' };
+      showError(e.msg, 'Please check the code and try again.');
+      setErrors(prev => ({ ...prev, "email-intro": e.key }));
+    }
+  }, [showError, showSuccess, clearReferralCode]);
+
+  const validateReferralCode = useCallback(async (code: string) => {
+    if (!code?.trim() || !deviceData) return;
     setReferralCodeValid(false);
     setReferralCodeLocked(false);
-    
     try {
-      const response = await fetch('/api/referral/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          referralCode: referralCode.trim(),
-          deviceData: deviceData
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        setReferralCodeValid(false);
-        setReferralCodeLocked(false);
-        
-        if (result.code === 'REFERRAL_NOT_FOUND') {
-          showError('Referral Code Not Found', 'The referral code you entered does not exist in our system. Please check the code again or contact the person who referred you.');
-          setErrors(prev => ({
-            ...prev,
-            "email-intro": "Referral code not found"
-          }));
-        } else if (result.code === 'INVALID_REFERRAL_CODE') {
-          showError('Invalid Referral Code Format', 'The referral code format is incorrect. Please check the code format and try again.');
-          setErrors(prev => ({
-            ...prev,
-            "email-intro": "Invalid referral code format"
-          }));
-        } else if (result.code === 'CODE_INACTIVE') {
-          showError('Special Code Inactive', 'This special referral code is currently inactive and cannot be used.');
-          setErrors(prev => ({
-            ...prev,
-            "email-intro": "Special code is inactive"
-          }));
-        } else if (result.code === 'CODE_EXPIRED') {
-          showError('Special Code Expired', 'This special referral code has expired and can no longer be used.');
-          setErrors(prev => ({
-            ...prev,
-            "email-intro": "Special code has expired"
-          }));
-        } else if (result.code === 'CANNOT_USE_OWN_CODE') {
-          showError('Cannot Use Own Code', 'You cannot use your own referral code. Please use a different referral code.');
-          setErrors(prev => ({
-            ...prev,
-            "email-intro": "Cannot use your own referral code"
-          }));
-        } else {
-          showError('Referral Code Validation Failed', 'Unable to validate the referral code. Please try again later.');
-          setErrors(prev => ({
-            ...prev,
-            "email-intro": "Referral code validation failed"
-          }));
-        }
-      } else {
-        console.log('Setting referral code as valid from URL');
-        if (result.data?.fingerprint) {
-          localStorage.setItem('deviceFingerprint', result.data.fingerprint);
-        }
-        
-        setReferralCodeValid(true);
-        setReferralCodeLocked(true); 
-        setErrors(prev => ({
-          ...prev,
-          "email-intro": undefined
-        }));
-
-        if (result.data?.isSpecial) {
-          showSuccess('Special Referral Code Validated', 'Special referral code is valid and can be used!');
-        } else {
-          showSuccess('Referral Code Validated', `Referral code from ${result.data?.referrerName || 'user'} is valid!`);
-        }
-      }
-    } catch (error) {
-      setErrors(prev => ({
-        ...prev,
-        "email-intro": "Failed to validate referral code"
-      }));
+      const res = await fetch('/api/referral/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ referralCode: code.trim(), deviceData }) });
+      const result = await res.json();
+      applyReferralResult(result, res.ok, false);
+    } catch {
+      setErrors(prev => ({ ...prev, "email-intro": "Failed to validate referral code" }));
     }
-  }, [deviceData, showError, showSuccess]);
+  }, [deviceData, applyReferralResult]);
+
+  useEffect(() => {
+    const getCodeFromHash = (h: string) => {
+      const m = h.match(/#contact(?:#|&)code=([^#&]+)/i) ?? (h.slice(1).startsWith('contact') ? h.match(/contact#code=([^#&]+)/) : null);
+      return m?.[1] ? decodeURIComponent(m[1]).trim() : null;
+    };
+    const hash = window.location.hash;
+    const code = getCodeFromHash(hash);
+    if (code) {
+      setFormData(prev => ({ ...prev, "email-intro": code }));
+      if (deviceData) validateReferralCode(code);
+    }
+    if (hash?.includes('contact')) setTimeout(scrollToContact, 100);
+    const onHash = () => {
+      const h = window.location.hash;
+      const c = getCodeFromHash(h);
+      if (c) {
+        setFormData(prev => ({ ...prev, "email-intro": c }));
+        if (deviceData) validateReferralCode(c);
+      }
+      if (h?.includes('contact')) setTimeout(scrollToContact, 100);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [deviceData, validateReferralCode]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -365,12 +257,7 @@ export default function ContactFormSection() {
       }
     }
 
-    if (!formData["your-course"].trim()) {
-      newErrors["your-course"] = "Course selection is required";
-    }
-
-   
-
+    if (!formData["your-course"].trim()) newErrors["your-course"] = "Course selection is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -400,105 +287,20 @@ export default function ContactFormSection() {
       if (value.trim() && deviceData) {
         setReferralCodeValid(false);
         setReferralCodeLocked(false);
-        
-        // Use a shorter timeout to avoid race conditions
         setTimeout(async () => {
-        try {
-          const response = await fetch('/api/referral/validate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              referralCode: value.trim(),
-              deviceData: deviceData
-            }),
-          });
-
-          const result = await response.json();
-          
-          if (!response.ok) {
-            
-            
-            setReferralCodeValid(false);
-            setReferralCodeLocked(false);
-            
-            if (result.code === 'REFERRAL_NOT_FOUND') {
-              showError('Referral Code Not Found', 'The referral code you entered does not exist in our system. Please check the code again or contact the person who referred you.');
-              clearReferralCode();
-              setErrors(prev => ({
-                ...prev,
-                "email-intro": "Referral code not found"
-              }));
-            } else if (result.code === 'INVALID_REFERRAL_CODE') {
-              showError('Invalid Referral Code Format', 'The referral code format is incorrect. Please check the code format and try again.');
-              clearReferralCode();
-              setErrors(prev => ({
-                ...prev,
-                "email-intro": "Invalid referral code format"
-              }));
-            } else if (result.code === 'CODE_INACTIVE') {
-              showError('Special Code Inactive', 'This special referral code is currently inactive and cannot be used.');
-              clearReferralCode();
-              setErrors(prev => ({
-                ...prev,
-                "email-intro": "Special code is inactive"
-              }));
-            } else if (result.code === 'CODE_EXPIRED') {
-              showError('Special Code Expired', 'This special referral code has expired and can no longer be used.');
-              clearReferralCode();
-              setErrors(prev => ({
-                ...prev,
-                "email-intro": "Special code has expired"
-              }));
-            } else if (result.code === 'CANNOT_USE_OWN_CODE') {
-              showError('Cannot Use Own Code', 'You cannot use your own referral code. Please use a different referral code.');
-              clearReferralCode();
-              setErrors(prev => ({
-                ...prev,
-                "email-intro": "Cannot use your own referral code"
-              }));
-            } else {
-              showError('Referral Code Validation Failed', 'Unable to validate the referral code. Please try again later.');
-              clearReferralCode();
-              setErrors(prev => ({
-                ...prev,
-                "email-intro": "Referral code validation failed"
-              }));
-            }
-          } else {
-            if (result.data?.fingerprint) {
-              localStorage.setItem('deviceFingerprint', result.data.fingerprint);
-            }
-            
-            setReferralCodeValid(true);
-            setReferralCodeLocked(true); 
-            setErrors(prev => ({
-              ...prev,
-              "email-intro": undefined
-            }));
-
-            if (result.data?.isSpecial) {
-              showSuccess('Special Referral Code Validated', 'Special referral code is valid and can be used!');
-            } else {
-              showSuccess('Referral Code Validated', `Referral code from ${result.data?.referrerName || 'user'} is valid!`);
-            }
+          try {
+            const res = await fetch('/api/referral/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ referralCode: value.trim(), deviceData }) });
+            const result = await res.json();
+            applyReferralResult(result, res.ok, true);
+          } catch {
+            clearReferralCode();
+            setErrors(prev => ({ ...prev, "email-intro": "Failed to validate referral code" }));
           }
-        } catch (error) {
-          clearReferralCode();
-          setErrors(prev => ({
-            ...prev,
-            "email-intro": "Failed to validate referral code"
-          }));
-        }
-      }, 300); 
+        }, 300);
       } else {
         setReferralCodeValid(false);
         setReferralCodeLocked(false);
-        setErrors(prev => ({
-          ...prev,
-          "email-intro": undefined
-        }));
+        setErrors(prev => ({ ...prev, "email-intro": undefined }));
       }
     }
   };
@@ -601,15 +403,28 @@ export default function ContactFormSection() {
                   <StarIcon size="lg" className="w-16 h-16" />
                   <h2 className="text-2xl lg:text-4xl xl:text-5xl font-bold text-gray-900 dark:text-white">Từ Zero đến Builder</h2>
                 </div>
-                <div className="max-w-3xl">
-                  <p className="text-xl text-gray-600 dark:text-gray-300">
-                    Tham gia chương trình đào tạo Blockchain chuyên sâu của chúng tôi, nơi bạn không chỉ học, mà còn trực tiếp xây dựng những ứng dụng phi tập trung có giá trị cho cộng đồng.
-                  </p>
-                </div>
+                {!selectedCourseImage && (
+                  <div className="max-w-3xl">
+                    <p className="text-xl text-gray-600 dark:text-gray-300">
+                      Tham gia chương trình đào tạo Blockchain chuyên sâu của chúng tôi, nơi bạn không chỉ học, mà còn trực tiếp xây dựng những ứng dụng phi tập trung có giá trị cho cộng đồng.
+                    </p>
+                  </div>
+                )}
               </div>
               {selectedCourseImage && (
                 <div className="mt-6 relative w-full h-[500px]">
-                  <ContactFormImage imageUrl={selectedCourseImage} />
+                  <img
+                    src={selectedCourseImage}
+                    alt="Course background"
+                    className="w-full h-full object-cover rounded-lg opacity-80 cursor-zoom-in hover:opacity-90 transition-opacity"
+                    onClick={() => setIsLightboxOpen(true)}
+                  />
+                  <ImageModal
+                    isOpen={isLightboxOpen}
+                    onClose={() => setIsLightboxOpen(false)}
+                    imageUrl={selectedCourseImage}
+                    alt="Course background"
+                  />
                 </div>
               )}
             </div>
@@ -625,18 +440,18 @@ export default function ContactFormSection() {
               <ContactForm
                 formData={formData}
                 errors={errors}
-                isSubmitting={isSubmitting}
-                captchaValid={captchaValid}
-                captchaKey={captchaKey}
-                referralCodeValid={referralCodeValid}
+                courses={courses}
+                coursesError={coursesError}
                 referralCodeLocked={referralCodeLocked}
+                isSubmitting={isSubmitting}
+                captchaKey={captchaKey}
+                captchaValid={captchaValid}
+                emailValid={emailValid}
+                nameValid={nameValid}
+                referralCodeValid={referralCodeValid}
                 onInputChange={handleInputChange}
                 onSubmit={handleSubmit}
-                onCaptchaChange={({ isValid, text, answer }) => {
-                  setCaptchaValid(isValid);
-                  setCaptchaText(text);
-                  setCaptchaAnswer(answer);
-                }}
+                onCaptchaChange={({ isValid, text, answer }) => { setCaptchaValid(isValid); setCaptchaText(text); setCaptchaAnswer(answer); }}
                 onCourseChange={handleCourseChange}
               />
             )}

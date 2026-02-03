@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { ImageModal } from "~/components/ui/ImageModal";
 import { images } from "~/public/images";
 import { routers } from "~/constants/routers";
 import { TipTapPreview } from "~/components/ui/tiptap-preview";
@@ -26,6 +27,7 @@ const initialFormData = {
 export default function LandingSection() {
   const [formData, setFormData] = useState(initialFormData);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
 
   const { data: landingContents = [] } = useQuery({
     queryKey: ["landing-content"],
@@ -120,13 +122,24 @@ export default function LandingSection() {
               key={currentSlide.url}
               src={currentSlide.url}
               alt={currentSlide.title}
-              className="w-full h-full object-cover animate-in fade-in duration-500"
+              className="w-full h-full object-cover animate-in fade-in duration-500 cursor-zoom-in"
+              onClick={() => setLightboxImage(currentSlide)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && setLightboxImage(currentSlide)}
+              aria-label="View image"
             />
           )}
         </div>
-        <div className="relative z-10 w-full min-w-0 pl-4 pr-4 pt-4 pb-12 sm:pl-6 sm:pt-6 lg:pl-8 lg:pt-8 lg:pb-20">
+        <ImageModal
+          isOpen={!!lightboxImage}
+          onClose={() => setLightboxImage(null)}
+          imageUrl={lightboxImage?.url ?? ""}
+          alt={lightboxImage?.title ?? ""}
+        />
+        <div className="relative z-10 w-full min-w-0 pl-4 pr-4 pt-4 pb-12 sm:pl-6 sm:pt-6 lg:pl-8 lg:pt-8 lg:pb-20 pointer-events-none">
           <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:grid-cols-2 lg:gap-16 items-center min-w-0">
-            <div className="relative max-w-2xl">
+            <div className="relative max-w-2xl pointer-events-auto">
               <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-gray-900/95 shadow-xl backdrop-blur-sm p-6 sm:p-8 lg:p-10 space-y-6">
                 {formData.title ? (
                   <h1
