@@ -33,39 +33,11 @@ function useTabs() {
   return { tabs: (q.data?.data || []) as Tab[] };
 }
 
-function MembersSkeleton() {
-  return (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-      {[...Array(6)].map((_, i) => (
-        <div key={i} className="animate-pulse">
-          <div className="bg-gray-300 dark:bg-gray-700 rounded-lg h-64 mb-4" />
-          <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-2" />
-          <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/2" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AboutSectionSkeleton() {
-  return (
-    <div className="w-full max-w-[1200px] animate-pulse">
-      <div className="aspect-video w-full rounded-2xl bg-gray-300 dark:bg-gray-700 mb-6" />
-      <div className="space-y-4">
-        <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
-        <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-12 bg-gray-300 dark:bg-gray-700 rounded w-1/2" />
-      </div>
-    </div>
-  );
-}
-
 export default function MemberPageClient() {
   useNotifications();
   const { data: session } = useSession();
   const { showSuccess, showError } = useToastContext();
-  const { members, isLoading } = useMembers();
+  const { members } = useMembers();
   const { tabs } = useTabs();
 
   const [selectedMember, setSelectedMember] = useState<MemberType | null>(null);
@@ -163,33 +135,6 @@ export default function MemberPageClient() {
   };
 
   const getSelectedIndex = () => selectedMember ? filteredMembers.findIndex((m) => m.id === selectedMember.id) : 0;
-
-  if (isLoading) {
-    return (
-      <main className={MAIN_CLASS}>
-        <BackgroundMotion />
-        <section className={LAYOUT} id="about-top">
-          <div id="executive-team" className="scroll-mt-28 md:scroll-mt-40"><Title title="Executive Team" description="Đội ngũ nòng cốt Cardano2VN." /></div>
-          <div id="about-section" className="scroll-mt-28 md:scroll-mt-40 mb-16"><AboutSectionSkeleton /></div>
-          <div id="our-cardano-team" className="scroll-mt-28 md:scroll-mt-40 mb-16">
-            <div className="rounded-sm border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 p-8">
-              <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-4 animate-pulse" />
-              <div className="space-y-3"><div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full animate-pulse" /><div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6 animate-pulse" /></div>
-            </div>
-          </div>
-          <div id="members" className="scroll-mt-28 md:scroll-mt-40 pb-20"><MembersSkeleton /></div>
-        </section>
-        <section id="contact" className="scroll-mt-28 md:scroll-mt-40 pt-32 pb-12 lg:pt-40 lg:pb-16 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-blue-950">
-          <div className={LAYOUT}>
-            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-              <div className="w-full lg:w-1/2"><Title title="Get in Touch" description="Liên hệ với chúng tôi." /></div>
-              <div className="w-full lg:w-1/2"><div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" /></div>
-            </div>
-          </div>
-        </section>
-      </main>
-    );
-  }
 
   return (
     <main className={MAIN_CLASS} suppressHydrationWarning>

@@ -25,8 +25,9 @@ export default function AboutContactForm({ formData, errors, isSubmitting, captc
   const canSubmit = captchaValid && nameOk && emailOk;
 
   return (
-    <div className="rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-[#ffffff] dark:bg-gray-800">
-      <form onSubmit={onSubmit} className="p-6 space-y-4">
+    <div className="relative isolate rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-none">
+      <div className="absolute inset-0 rounded-xl bg-white dark:bg-gray-800" aria-hidden />
+      <form onSubmit={onSubmit} className="relative z-10 p-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Full Name *</label>
