@@ -224,11 +224,11 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
   const nestedComments = toNested(toFlat(post.comments ?? []), post.authorId ?? "", post.authorWallet);
 
   return (
-    <main className="relative min-h-screen bg-white dark:bg-gray-950 scrollbar-hide">
+    <main className="relative min-h-screen bg-white dark:bg-gray-950 scrollbar-hide pt-16">
       <BackgroundMotion />
       <div className="fixed inset-0 z-[1] pointer-events-none bg-gray-100/80 dark:bg-gray-950/85" aria-hidden />
       <Header />
-      <div className="pt-20">
+      <div className="pt-6 sm:pt-8">
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pb-20 lg:px-8">
           <article className="min-w-0 max-w-4xl mx-auto">
             <Link href="/blog" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm mb-6">

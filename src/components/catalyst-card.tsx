@@ -21,11 +21,11 @@ export default function ProjectCard({ project, onOpenModal }: ProjectCardProps &
   return (
     <>
       <div
-        className="group w-full rounded-sm border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 shadow-xl backdrop-blur-sm transition-all hover:border-gray-300 dark:hover:border-white/40 hover:shadow-2xl cursor-pointer"
+        className="w-full rounded-sm border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 backdrop-blur-sm cursor-pointer"
         onClick={() => onOpenModal(project)}
       >
         <div className="flex flex-col sm:flex-row w-full">
-          <div className="flex-grow border-l-4 sm:border-l-4 border-t-4 sm:border-t-0 bg-gray-50 dark:bg-gray-900/60 border-green-500 rounded-t-lg sm:rounded-t-none sm:rounded-l-lg">
+          <div className="flex-grow bg-gray-50 dark:bg-gray-900/60">
             <div className="p-4 sm:p-5">
               <div className="mb-3">
                 <h3 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white break-words">

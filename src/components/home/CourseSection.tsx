@@ -157,7 +157,7 @@ export default function CourseSection() {
                     src={course.image || "/images/common/loading.png"}
                     alt={course.name}
                     loading="lazy"
-                    className="w-full aspect-video object-cover group-hover:scale-[1.02] transition-transform duration-200"
+                    className="w-full aspect-video object-cover"
                     onError={(e) => ((e.target as HTMLImageElement).src = "/images/common/loading.png")}
                   />
                 </div>

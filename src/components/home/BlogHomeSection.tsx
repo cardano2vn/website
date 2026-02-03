@@ -154,7 +154,7 @@ export default function ProtocolSection() {
                     <img
                       alt={post.title}
                       loading="lazy"
-                      className="w-full aspect-video object-cover group-hover:scale-[1.02] transition-transform duration-200"
+                      className="w-full aspect-video object-cover"
                       src={getThumbnail(post)}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "/images/common/loading.png";

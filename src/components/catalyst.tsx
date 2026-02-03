@@ -43,7 +43,7 @@ export default function Project({
         <img
           alt={title}
           loading="lazy"
-          className="w-full max-w-lg cursor-pointer transition-transform duration-300 hover:scale-105 sm:max-w-xl md:max-w-2xl"
+          className="w-full max-w-lg sm:max-w-xl md:max-w-2xl"
           src={image}
           onError={(e) => {
             const target = e.target as HTMLImageElement;

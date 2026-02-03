@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
 import Title from "~/components/title";
 import BackgroundMotion from "~/components/ui/BackgroundMotion";
@@ -31,20 +30,15 @@ const cards = [
 
 export default function ServiceHubClient() {
   return (
-    <main className="relative pt-20 bg-white dark:bg-gray-950 min-h-screen">
+    <main className="relative pt-16 bg-white dark:bg-gray-950 min-h-screen">
       <BackgroundMotion />
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-20 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.6 }}
-        >
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-20 lg:px-8 lg:pt-8 lg:pb-20">
+        <div>
           <Title
             title="About Us"
             description="Truy cập nhanh About, Projects và Our Service — khám phá Cardano2vn: chúng tôi là ai, đang xây gì và cách chúng tôi đóng góp cho hệ sinh thái."
           />
-        </motion.div>
+        </div>
 
         <div className="mx-auto mb-16">
           <div className="rounded-sm border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 p-8 backdrop-blur-sm">
@@ -68,25 +62,21 @@ export default function ServiceHubClient() {
 
         <div className="grid gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
-            <motion.div
+            <div
               key={card.href}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5 }}
               className="rounded-sm border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 p-6 sm:p-8 backdrop-blur-sm"
             >
               <Link href={card.href} className="flex h-full flex-col">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">{card.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 flex-1 leading-relaxed">{card.description}</p>
-                <span className="mt-6 inline-flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400 group">
+                <span className="mt-6 inline-flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400">
                   {card.cta}
-                  <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <svg className="ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 11-1.414-1.414L13.586 10 10.293 6.707a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </span>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>

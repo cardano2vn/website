@@ -1,9 +1,9 @@
 export default function ProjectSkeleton() {
   return (
     <div className="w-full">
-      <div className="group w-full rounded-sm border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 shadow-xl backdrop-blur-sm">
+      <div className="w-full rounded-sm border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 backdrop-blur-sm">
         <div className="flex w-full">
-          <div className="flex-grow border-l-4 bg-gray-50 dark:bg-gray-900/60 border-green-500 rounded-l-lg">
+          <div className="flex-grow bg-gray-50 dark:bg-gray-900/60">
             <div className="p-5">
               <div className="mb-3">
                 <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>

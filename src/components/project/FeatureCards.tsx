@@ -49,7 +49,7 @@ export default function FeatureCards({ featureCardIds }: FeatureCardsProps) {
   if (isLoading) {
     return (
       <section className="mb-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {[...Array(Math.min(featureCardIds.length, 3))].map((_, i) => (
             <div key={i} className="rounded-lg border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 p-6 animate-pulse">
               <div className="mb-4">
@@ -70,7 +70,7 @@ export default function FeatureCards({ featureCardIds }: FeatureCardsProps) {
 
   return (
     <section className="mb-16">
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {featureCards.map((card, cardIndex) => (
           <div key={card.id || cardIndex} className="rounded-lg border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 p-6">
             <div className="mb-4">

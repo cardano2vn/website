@@ -6,7 +6,6 @@ import Title from "~/components/title";
 import AboutSection from "~/components/project/AboutSection";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { flushSync } from "react-dom";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useToastContext } from "~/components/toast-provider";
@@ -242,8 +241,6 @@ export default function MemberPageClient() {
       }
       return response.json();
     },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 15 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -261,8 +258,6 @@ export default function MemberPageClient() {
       }
       return response.json();
     },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 15 * 60 * 1000,
   });
 
   // Redirect to 404 if tabs data fails to load
@@ -372,10 +367,8 @@ export default function MemberPageClient() {
   }, [totalPages]); 
 
   const handleMemberClick = (member: MemberType) => {
-    flushSync(() => {
-      setSelectedMember(member);
-      setIsModalOpen(true);
-    });
+    setSelectedMember(member);
+    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -718,7 +711,7 @@ export default function MemberPageClient() {
           <Title title="Executive Team" description="Đội ngũ nòng cốt Cardano2VN gồm những thành viên chủ chốt, trực tiếp định hướng chiến lược và phát triển dự án trên Cardano." />
         </div>
         
-        <div id="about-section" className="scroll-mt-28 md:scroll-mt-40 overflow-hidden">
+        <div id="about-section" className="scroll-mt-28 md:scroll-mt-40">
           <AboutSection />
         </div>
 

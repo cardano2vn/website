@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import CommentInput from "./CommentInput";
 import CommentItem from "./CommentItem";
-import { CommentSkeletonList } from "./CommentSkeleton";
 import { useUser } from '~/hooks/useUser';
 import { useMutation } from '@tanstack/react-query';
 import { Comment, CommentSectionProps } from '~/constants/comment';

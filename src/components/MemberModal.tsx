@@ -220,75 +220,17 @@ export default function MemberModal({ member, members = [], initialIndex = 0, is
             </div>
           </motion.div>
           
-          <motion.button
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.3 }}
+          <button
+            type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 button"
+            className="absolute top-4 right-4 z-10 p-2 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
             title="Close modal"
             aria-label="Close modal"
-            style={{
-              width: "4em",
-              height: "4em",
-              border: "none",
-              background: "rgba(180, 83, 107, 0.11)",
-              borderRadius: "5px",
-              transition: "background 0.5s",
-              zIndex: 50,
-            }}
           >
-            <span
-              className="X"
-              style={{
-                content: "",
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                width: "2em",
-                height: "1.5px",
-                backgroundColor: "rgb(255, 255, 255)",
-                transform: "translateX(-50%) rotate(45deg)",
-              }}
-            ></span>
-            <span
-              className="Y"
-              style={{
-                content: "",
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                width: "2em",
-                height: "1.5px",
-                backgroundColor: "#fff",
-                transform: "translateX(-50%) rotate(-45deg)",
-              }}
-            ></span>
-            <div
-              className="close"
-              style={{
-                position: "absolute",
-                display: "flex",
-                padding: "0.8rem 1.5rem",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: "translateX(-50%)",
-                top: "-70%",
-                left: "50%",
-                width: "3em",
-                height: "1.7em",
-                fontSize: "12px",
-                backgroundColor: "rgb(19, 22, 24)",
-                color: "rgb(187, 229, 236)",
-                border: "none",
-                borderRadius: "3px",
-                pointerEvents: "none",
-                opacity: "0",
-              }}
-            >
-              Close
-            </div>
-          </motion.button>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </motion.div>
       )}
     </AnimatePresence>

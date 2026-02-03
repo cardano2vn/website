@@ -66,7 +66,7 @@ export default function Blog({
                 <img
                   alt={title}
                   loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="h-full w-full object-cover"
                   src={imgUrl}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -78,7 +78,7 @@ export default function Blog({
                 <img
                   alt={title}
                   loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="h-full w-full object-cover"
                   src={"/images/common/logo.png"}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
