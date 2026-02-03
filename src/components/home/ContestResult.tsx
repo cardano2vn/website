@@ -30,8 +30,8 @@ export default function ContestResult({ data, onBack }: { data: ContestResultDat
   const opts = (data.displayOptions && data.displayOptions[current]) ? data.displayOptions[current] : q.options;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden w-full">
-      <div className="p-4 sm:p-5 w-full space-y-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden w-full">
+      <div className="p-4 sm:p-5 w-full space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Your Results {current + 1}/{total}</h3>
           {onBack && (
@@ -46,7 +46,7 @@ export default function ContestResult({ data, onBack }: { data: ContestResultDat
 
         <div className="py-2">
           <div className="mb-2 text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">{current + 1}. <MathText text={q.text} /></div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {opts.map(opt => {
               const isSel = sel === opt.key;
               const isAns = q.correct === opt.key;

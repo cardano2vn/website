@@ -24,11 +24,11 @@ export default function ContestForm({ onStart }: { onStart?: (email: string) => 
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden w-full">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden w-full">
       <div className="p-4 sm:p-5 w-full">
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 w-full">
+        <div className="grid grid-cols-1 gap-3 w-full">
           <form onSubmit={onSubmit}>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                 <input
@@ -44,7 +44,7 @@ export default function ContestForm({ onStart }: { onStart?: (email: string) => 
               <button
                 type="submit"
                 disabled={starting || !/^[^\s@]+@gmail\.com$/i.test(email.trim())}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:text-success text-sm sm:text-base bg-blue-600 dark:bg-white px-4 sm:px-5 py-2 sm:py-2.5 font-semibold text-white dark:text-blue-900 shadow-lg hover:bg-blue-700 dark:hover:bg-gray-100 w-full md:w-auto"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:text-success text-sm sm:text-base bg-blue-600 dark:bg-white px-4 sm:px-5 py-2 sm:py-2.5 font-semibold text-white dark:text-blue-900 hover:bg-blue-700 dark:hover:bg-gray-100 w-full md:w-auto"
               >
                 {starting ? 'Starting...' : 'Start Quiz'}
               </button>

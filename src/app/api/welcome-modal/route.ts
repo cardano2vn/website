@@ -4,40 +4,10 @@ import { createSuccessResponse, createErrorResponse } from "~/lib/api-response";
 
 export async function GET() {
   try {
-    const now = new Date();
     const welcomeModal = await prisma.welcomeModal.findFirst({
-      where: {
-        isActive: true,
-        OR: [
-          {
-            publishStatus: 'PUBLISHED',
-            OR: [
-              {
-                startDate: null,
-                endDate: null
-              },
-              {
-                startDate: { lte: now },
-                endDate: { gte: now }
-              },
-              {
-                startDate: { lte: now },
-                endDate: null
-              },
-              {
-                startDate: null,
-                endDate: { gte: now }
-              }
-            ]
-          },
-          {
-            publishStatus: 'DRAFT'
-          }
-        ]
-      },
-      orderBy: { createdAt: 'desc' }
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' },
     });
-
     return NextResponse.json(createSuccessResponse(welcomeModal));
   } catch (error) {
     return NextResponse.json(

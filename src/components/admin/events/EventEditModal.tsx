@@ -2,14 +2,12 @@
 
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { useSession } from "next-auth/react";
 import { useToastContext } from "~/components/toast-provider";
 import MediaInput from "~/components/ui/media-input";
 import { MediaInputMedia } from "~/constants/media";
 import { Event, EditModalProps } from "~/constants/events";
 
-export default function EditModal({ isOpen, onClose, event, index, onSave }: EditModalProps) {
-  const { data: session } = useSession();
+export default function EventEditModal({ isOpen, onClose, event, index, onSave }: EditModalProps) {
   const { showSuccess, showError } = useToastContext();
   const [title, setTitle] = useState(event.title);
   const [location, setLocation] = useState(event.location);
@@ -17,7 +15,6 @@ export default function EditModal({ isOpen, onClose, event, index, onSave }: Edi
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-
     if (isOpen) {
       setTitle(event.title);
       setLocation(event.location);
@@ -25,26 +22,20 @@ export default function EditModal({ isOpen, onClose, event, index, onSave }: Edi
         setSelectedMedia({
           id: (event as any).publicId || "",
           url: event.imageUrl,
-          type: "image"
+          type: "image",
         });
       } else {
         setSelectedMedia(null);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, event.title, event.location, event.imageUrl]);
 
   const handleMediaAdd = (media: MediaInputMedia) => {
     setSelectedMedia(media);
   };
 
   const handleSave = async () => {
-    if (!session?.user) {
-      showError("Please log in to save changes");
-      return;
-    }
-
     setIsSaving(true);
-
     try {
       const payload = {
         title,
@@ -55,7 +46,7 @@ export default function EditModal({ isOpen, onClose, event, index, onSave }: Edi
 
       const res = await fetch(`/api/admin/event-images`, {
         method: "POST",
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -97,7 +88,7 @@ export default function EditModal({ isOpen, onClose, event, index, onSave }: Edi
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm bg-opacity-50" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto ">
+        <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             <Transition.Child
               as={Fragment}
@@ -114,19 +105,23 @@ export default function EditModal({ isOpen, onClose, event, index, onSave }: Edi
                 </Dialog.Title>
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label htmlFor="event-title" className="block text-sm font-medium dark:text-white text-gray-700">Title</label>
+                    <label htmlFor="event-title" className="block text-sm font-medium dark:text-white text-gray-700">
+                      Title
+                    </label>
                     <input
                       id="event-title"
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="mt-1 w-full text-black dark:text-white dark:bg-gray-700  rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
+                      className="mt-1 w-full text-black dark:text-white dark:bg-gray-700 rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
                       disabled={isSaving}
                       placeholder="Enter event title"
                     />
                   </div>
                   <div>
-                    <label htmlFor="event-location" className="block text-sm font-medium  dark:text-white text-gray-700">Location</label>
+                    <label htmlFor="event-location" className="block text-sm font-medium dark:text-white text-gray-700">
+                      Location
+                    </label>
                     <input
                       id="event-location"
                       type="text"
@@ -139,11 +134,7 @@ export default function EditModal({ isOpen, onClose, event, index, onSave }: Edi
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">Image</label>
-                    <MediaInput 
-                      onMediaAdd={handleMediaAdd}
-                      mediaType="image"
-                      showVideoLibrary={false}
-                    />
+                    <MediaInput onMediaAdd={handleMediaAdd} mediaType="image" showVideoLibrary={false} />
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end gap-2">

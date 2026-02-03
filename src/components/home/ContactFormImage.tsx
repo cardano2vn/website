@@ -14,7 +14,7 @@ export default function ContactFormImage({ imageUrl }: ContactFormImageProps) {
       <img
         src={imageUrl}
         alt="Course background"
-        className="w-full h-full object-cover rounded-lg shadow opacity-80 cursor-zoom-in hover:opacity-90 transition-opacity"
+        className="w-full h-full object-cover rounded-lg opacity-80 cursor-zoom-in hover:opacity-90 transition-opacity"
         onClick={() => setIsLightboxOpen(true)}
       />
 

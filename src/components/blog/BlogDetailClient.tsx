@@ -325,7 +325,7 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
   }
 
   return (
-    <main className="relative min-h-screen bg-white dark:bg-gray-950">
+    <main className="relative min-h-screen bg-white dark:bg-gray-950 scrollbar-hide">
       <BackgroundMotion />
       <Header />
       <div className="pt-20">

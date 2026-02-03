@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "~/components/toast-provider";
 import { AdminHeader } from "../common/AdminHeader";
-import CTAEditModal from "~/components/home/CTAEditModal";
+import EventEditModal from "~/components/admin/events/EventEditModal";
 import { Event } from "~/constants/events";
 
 const SLOTS = [0, 1, 2, 3, 4, 5];
@@ -133,7 +133,7 @@ export function EventsTabContent() {
       </div>
 
       {editingIndex !== null && (
-        <CTAEditModal
+        <EventEditModal
           isOpen={true}
           onClose={() => setEditingIndex(null)}
           event={getEvent(editingIndex)}

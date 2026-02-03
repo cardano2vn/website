@@ -12,7 +12,7 @@ interface ContactFormTabsProps {
 export default function ContactFormTabs({ activeTab, onTabChange }: ContactFormTabsProps) {
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 mb-8">
-      <nav className="-mb-px flex flex-wrap gap-1 sm:gap-2 md:gap-8 overflow-x-auto pb-2">
+      <nav className="-mb-px flex flex-wrap gap-3 overflow-x-auto pb-2">
         <button
           onClick={() => onTabChange("form")}
           className={`py-2 px-2 sm:px-3 md:px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex-shrink-0 ${

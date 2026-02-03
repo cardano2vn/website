@@ -2,25 +2,14 @@
 
 import Loading from "~/components/ui/Loading";
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import LandingSection from "~/components/home/LandingSection";
 import ProtocolSection from "~/components/home/BlogHomeSection";
+import CourseSection from "~/components/home/CourseSection";
+import CTASection from "~/components/home/CTASection";
+import VideoSection from "~/components/home/VideoSection";
+import ContactFormSection from "~/components/home/ContactFormSection";
 import { useNotifications } from "~/hooks/useNotifications";
 import BackgroundMotion from "~/components/ui/BackgroundMotion";
-
-// Lazy load các sections không cần thiết ngay khi page load
-const CourseSection = dynamic(() => import("~/components/home/CourseSection"), {
-  loading: () => <div className="min-h-[400px]" />,
-});
-const CTASection = dynamic(() => import("~/components/home/CTASection"), {
-  loading: () => <div className="min-h-[300px]" />,
-});
-const VideoSection = dynamic(() => import("~/components/home/VideoSection"), {
-  loading: () => <div className="min-h-[400px]" />,
-});
-const ContactFormSection = dynamic(() => import("~/components/home/ContactFormSection"), {
-  loading: () => <div className="min-h-[500px]" />,
-});
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
@@ -136,7 +125,7 @@ export default function HomePage() {
   if (loading) return <Loading />;
 
   return (
-    <main className="bg-white dark:bg-gray-950 overflow-x-hidden">
+    <main className="bg-white dark:bg-gray-950 overflow-x-hidden scrollbar-hide">
       <BackgroundMotion />
       <LandingSection />
       <ProtocolSection />

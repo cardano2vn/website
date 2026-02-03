@@ -5,21 +5,22 @@ import { useQuery } from "@tanstack/react-query";
 import { AboutContent } from '~/constants/about';
 import { TipTapPreview } from "~/components/ui/tiptap-preview";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function AboutSection() {
   const [ytReady, setYtReady] = useState(false);
   const playerRef = useRef<any>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const { data: queryData, isLoading, error: aboutError } = useQuery({
     queryKey: ['about-content'],
     queryFn: async () => {
       const response = await fetch('/api/about');
-      if (!response.ok) {
-        throw new Error('Failed to fetch about content');
-      }
+      if (!response.ok) throw new Error('Failed to fetch about content');
       return response.json();
-    }
+    },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -29,6 +30,29 @@ export default function AboutSection() {
   }, [aboutError]);
 
   const aboutContent: AboutContent | null = queryData?.data || null;
+
+  const slides = aboutContent ? [
+    {
+      id: 'video',
+      type: 'video' as const,
+      content: aboutContent
+    },
+    {
+      id: 'stats',
+      type: 'stats' as const,
+      content: aboutContent
+    }
+  ] : [];
+
+  const goToPrevious = () => {
+    if (slides.length === 0) return;
+    setCurrentSlide((prev) => prev === 0 ? slides.length - 1 : prev - 1);
+  };
+
+  const goToNext = () => {
+    if (slides.length === 0) return;
+    setCurrentSlide((prev) => prev === slides.length - 1 ? 0 : prev + 1);
+  };
 
   function getYoutubeIdFromUrl(url: string) {
     if (!url) return null;
@@ -132,16 +156,14 @@ export default function AboutSection() {
   if (isLoading) {
     return (
       <section className="mb-16 text-left">
-        <aside className="mx-auto my-0 flex w-full max-w-[1200px] flex-col gap-2">
-          <div className="flex w-full gap-7 max-sm:flex-col">
-            <div className='m relative aspect-video w-[60%] rounded-3xl before:absolute before:left-8 before:top-8 before:h-full before:w-full before:rounded-3xl before:bg-gray-300 dark:before:bg-slate-900 before:shadow-xl before:content-[""] max-sm:w-full animate-pulse'>
-              <div className="absolute inset-0 z-10 block h-full w-full rounded-xl bg-gray-300 dark:bg-gray-700"></div>
-            </div>
-            <div className="z-10 flex w-[40%] flex-col items-start gap-[15px] max-md:gap-3 max-sm:w-full">
-              <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
-              <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-full animate-pulse"></div>
-              <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded w-full animate-pulse"></div>
-              <div className="h-12 bg-gray-300 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+        <aside className="mx-auto my-0 flex w-full max-w-[1200px] flex-col gap-6">
+          <div className="w-full animate-pulse">
+            <div className="relative aspect-video w-full rounded-2xl bg-gray-300 dark:bg-gray-700 mb-6"></div>
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
+              <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
+              <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
+              <div className="h-12 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
             </div>
           </div>
         </aside>
@@ -149,58 +171,103 @@ export default function AboutSection() {
     );
   }
 
-  if (!aboutContent) {
+  if (!aboutContent || slides.length === 0) {
     return null;
   }
 
+  const currentSlideData = slides[currentSlide];
+
   return (
-    <section className="mb-16 text-left overflow-hidden">
-      <aside className="mx-auto my-0 flex w-full max-w-[1200px] flex-col gap-2 overflow-hidden">
-        <div className="flex w-full gap-7 max-sm:flex-col items-start overflow-hidden min-w-0">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ 
-              duration: 0.8, 
-              ease: "easeOut",
-              type: "spring",
-              stiffness: 100
-            }}
-            whileHover={{ 
-              scale: 1.02,
-              transition: { duration: 0.3 }
-            }}
-            className='relative aspect-video w-[60%] rounded-3xl before:absolute before:left-8 before:top-8 before:h-full before:w-full before:rounded-3xl before:bg-gray-300 dark:before:bg-slate-900 before:shadow-xl before:content-[""] max-sm:w-full flex-shrink-0 self-start'
-          >
-            <div id="about-video-player" className="absolute inset-0 z-10 block h-full w-full rounded-xl"></div>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ 
-              duration: 0.6,
-              ease: "easeOut",
-              delay: 0.2
-            }}
-            className="z-10 flex w-[40%] flex-col items-start gap-[15px] max-md:gap-3 max-sm:w-full flex-shrink-0 min-w-0 overflow-hidden"
-          >
-            <h2 className="text-left text-[25px] font-bold max-md:text-xl text-gray-900 dark:text-white">{aboutContent.title}</h2>
-            <p className="mb-1 text-[20px] font-normal max-md:text-lg text-gray-700 dark:text-gray-300">{aboutContent.subtitle}</p>
-            <div className="text-left leading-[1.8] max-md:text-base text-gray-600 dark:text-gray-300 prose prose-sm max-w-none overflow-hidden">
-              <TipTapPreview content={aboutContent.description} />
-            </div>
-            <Link href={aboutContent.buttonUrl} target="_blank">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center justify-center whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:text-success p-1 text-md rounded-sm bg-blue-600 px-8 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700"
+    <section className="mb-16 text-left">
+      <aside className="mx-auto my-0 flex w-full max-w-[1200px] flex-col gap-6">
+        <div className="relative w-full rounded-2xl border border-gray-200 dark:border-white/20 bg-white dark:bg-gray-800/50 shadow-xl overflow-hidden">
+          {slides.length > 1 && (
+            <>
+              <button
+                onClick={goToPrevious}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                aria-label="Previous slide"
               >
-                {aboutContent.buttonText}
-              </motion.button>
-            </Link>
-          </motion.div>
+                <ChevronLeft size={24} />
+              </button>
+              <button
+                onClick={goToNext}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                aria-label="Next slide"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </>
+          )}
+
+          {currentSlideData.type === 'video' && (
+            <>
+              <div className="relative aspect-video w-full">
+                <div id="about-video-player" className="absolute inset-0 w-full h-full"></div>
+              </div>
+              <div className="p-6 lg:p-8 space-y-4">
+                <div>
+                  <h2 className="text-left text-2xl lg:text-3xl font-bold mb-2 text-gray-900 dark:text-white">{aboutContent.title}</h2>
+                  <p className="text-lg lg:text-xl font-normal text-gray-700 dark:text-gray-300 mb-4">{aboutContent.subtitle}</p>
+                </div>
+                <div className="text-left leading-relaxed text-base lg:text-lg text-gray-600 dark:text-gray-300 prose prose-sm max-w-none">
+                  <TipTapPreview content={aboutContent.description} />
+                </div>
+                <div className="pt-4">
+                  <Link href={aboutContent.buttonUrl} target="_blank">
+                    <button className="inline-flex items-center justify-center whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 text-md rounded-lg bg-blue-600 px-8 py-3 font-semibold text-white shadow-lg hover:bg-blue-700">
+                      {aboutContent.buttonText}
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
+
+          {currentSlideData.type === 'stats' && (
+            <div className="p-6 lg:p-8">
+              <h2 className="text-left text-2xl lg:text-3xl font-bold mb-6 text-gray-900 dark:text-white">{aboutContent.title}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">82+</div>
+                  <div className="text-gray-700 dark:text-gray-300">Meetups/Workshops</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Đã tiếp cận hơn 2000 học viên</div>
+                </div>
+                <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">55</div>
+                  <div className="text-gray-700 dark:text-gray-300">Educational Videos</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Với hơn 10,000 lượt xem</div>
+                </div>
+                <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">150+</div>
+                  <div className="text-gray-700 dark:text-gray-300">Giờ hướng dẫn</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hướng dẫn sinh viên</div>
+                </div>
+                <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">100+</div>
+                  <div className="text-gray-700 dark:text-gray-300">Người tham dự</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Tổ chức Hackathon</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {slides.length > 1 && (
+            <div className="flex justify-center gap-2 p-4 border-t border-gray-200 dark:border-white/20">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-2 h-2 rounded-full ${
+                    index === currentSlide
+                      ? 'bg-blue-600 dark:bg-blue-400'
+                      : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </aside>
     </section>

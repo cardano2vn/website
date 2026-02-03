@@ -78,7 +78,7 @@ export default function BlogPageClient() {
   }, [search, selectedTags]);
 
   return (
-    <main className="relative pt-20 bg-white dark:bg-gray-950 overflow-x-hidden">
+    <main className="relative pt-20 bg-white dark:bg-gray-950 overflow-x-hidden scrollbar-hide">
       <BackgroundMotion />
       <div className="mx-auto max-w-7xl w-full px-4 py-12 sm:px-6 sm:py-20 lg:px-8 lg:py-20">
         <motion.div

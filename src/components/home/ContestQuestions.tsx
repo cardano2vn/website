@@ -115,14 +115,14 @@ export default function ContestQuestions({ onBack }: { onBack?: () => void }) {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden w-full">
-        <div className="p-4 sm:p-5 w-full animate-pulse space-y-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden w-full">
+        <div className="p-4 sm:p-5 w-full animate-pulse space-y-3">
           <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded" />
             <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-700 rounded" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-10 w-full bg-gray-200 dark:bg-gray-700 rounded" />
             ))}
@@ -154,8 +154,8 @@ export default function ContestQuestions({ onBack }: { onBack?: () => void }) {
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border overflow-hidden w-full ${isDangerTime ? 'ring-2 ring-red-400 border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-      <div className="p-4 sm:p-5 w-full space-y-4">
+    <div className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden w-full ${isDangerTime ? 'ring-2 ring-red-400 border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+      <div className="p-4 sm:p-5 w-full space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Quiz: {current + 1}/{questions.length}</h3>
           <Countdown seconds={remaining} warningThreshold={30} />
@@ -163,7 +163,7 @@ export default function ContestQuestions({ onBack }: { onBack?: () => void }) {
 
         <div className="space-y-3">
           <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100"><MathText text={q.text} /></div>
-          <div className={`space-y-2 ${(submitting || remaining <= 0) ? 'pointer-events-none' : ''}`}>
+          <div className={`space-y-3 ${(submitting || remaining <= 0) ? 'pointer-events-none' : ''}`}>
             {displayOptions.map((opt) => (
               <label key={opt.key} className={`flex items-center gap-2 p-2 rounded border ${selected === opt.key ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : isDangerTime ? 'border-red-200 dark:border-red-700' : 'border-gray-200 dark:border-gray-700'}`}>
                 <input
@@ -190,7 +190,7 @@ export default function ContestQuestions({ onBack }: { onBack?: () => void }) {
           </button>
         ) : (
           <button
-            className={`mt-2 inline-flex items-center justify-center whitespace-nowrap rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50 text-sm sm:text-base px-4 sm:px-5 py-2 sm:py-2.5 font-semibold shadow-lg ` +
+            className={`mt-2 inline-flex items-center justify-center whitespace-nowrap rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50 text-sm sm:text-base px-4 sm:px-5 py-2 sm:py-2.5 font-semibold ` +
               (isDangerTime
                 ? 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-400 dark:bg-red-500 dark:text-white dark:hover:bg-red-600 '
                 : 'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-ring dark:bg-white dark:text-blue-900 dark:hover:bg-gray-100 ')

@@ -77,8 +77,20 @@ const config: NextConfig = {
         protocol: "https",
         hostname: "i.ytimg.com",
       },
+      {
+        protocol: "https",
+        hostname: "raw.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "us1.discourse-cdn.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.discourse-cdn.com",
+      },
     ],
-    domains: ["res.cloudinary.com"],
+    domains: ["res.cloudinary.com", "raw.githubusercontent.com", "us1.discourse-cdn.com"],
   },
   eslint: {
     ignoreDuringBuilds: true,

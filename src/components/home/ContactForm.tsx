@@ -36,7 +36,7 @@ export function ContactForm({ formData, errors, isSubmitting, captchaValid, capt
   });
 
   return (
-         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden max-w-2xl mx-auto">
+         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-w-2xl mx-auto">
        <form onSubmit={onSubmit} className="p-4 sm:p-5 space-y-2 sm:space-y-3">
          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
           <div>
@@ -279,7 +279,7 @@ export function ContactForm({ formData, errors, isSubmitting, captchaValid, capt
               !referralCodeValid
             )
           }
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:text-success text-base sm:text-lg bg-blue-600 dark:bg-white px-4 sm:px-6 py-2.5 sm:py-3 font-semibold text-white dark:text-blue-900 shadow-lg hover:bg-blue-700 dark:hover:bg-gray-100 w-full"
+          className="inline-flex items-center justify-center whitespace-nowrap rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:text-success text-base sm:text-lg bg-blue-600 dark:bg-white px-4 sm:px-6 py-2.5 sm:py-3 font-semibold text-white dark:text-blue-900 hover:bg-blue-700 dark:hover:bg-gray-100 w-full"
         >
           {isSubmitting ? (
             <div className="flex items-center justify-center">

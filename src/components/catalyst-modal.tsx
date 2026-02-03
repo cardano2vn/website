@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 // import { Project } from "~/constants/catalyst";
 import { ProjectModalProps } from "~/constants/catalyst";
-import CourseModalText from "~/components/home/CourseModalText";
+import { TipTapPreview } from "~/components/ui/tiptap-preview";
 
 export default function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
   const [mounted, setMounted] = useState(false);
@@ -33,15 +33,10 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 1, scaleX: 1, filter: "blur(0px)", transformOrigin: "right" }}
-          animate={{ opacity: 1, scaleX: 1, filter: "blur(0px)", transformOrigin: "right" }}
-          exit={{
-              opacity: 0,
-              scaleX: 0,
-              filter: "blur(12px)",
-              transformOrigin: "right",
-          }}
-          transition={{ duration: 0, ease: [0.25, 1, 0.5, 1] }}
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={onClose}
           onKeyDown={(e) => {
@@ -54,14 +49,14 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
           aria-labelledby="modal-title"
         >
           <motion.div
-            initial={{ scale: 1, opacity: 1, y: 0 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 20 }}
-            transition={{ duration: 0, ease: "easeOut" }}
+            initial={{ scale: 1, opacity: 1 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="relative w-full max-w-4xl max-h-[95vh] overflow-y-auto transparent-scrollbar"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-white dark:bg-gray-800 backdrop-blur-xl border border-gray-200 dark:border-gray-600 rounded-[40px] shadow-2xl">
+            <div className="bg-white dark:bg-gray-800 backdrop-blur-xl border border-gray-200 dark:border-gray-600 rounded-[40px]">
               <div className="p-8">
                 <div className="space-y-6">
                   {/* <div className="relative h-64 rounded-xl overflow-hidden">
@@ -76,7 +71,7 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
                   <div>
                     {project ? (
                       <>
-                        <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                           {project.title}
                         </h3>
                         <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -125,9 +120,11 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
 
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Project Description</h4>
-                    {project ? (
-                      <CourseModalText text={project.description} maxLength={200} />
-                    ) : (
+                    {project?.description ? (
+                      <div className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                        <TipTapPreview content={project.description} />
+                      </div>
+                    ) : project ? null : (
                       <div className="space-y-2 animate-pulse">
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
@@ -136,14 +133,8 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
                     )}
                   </div>
                   
-                  <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={onClose}
-                      className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
-                    >
-                      Close
-                    </button>
-                    {project && project.href && (
+                  {project?.href && (
+                    <div className="flex items-center justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
                       <Link
                         href={project.href}
                         target="_blank"
@@ -152,59 +143,22 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
                       >
                         View Full Proposal
                       </Link>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </motion.div>
-          
-          <motion.button
-            initial={{ opacity: 1, scale: 1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0 }}
+          <button
+            type="button"
             onClick={onClose}
-            className="absolute button"
-            style={{
-              position: 'absolute',
-              top: '8px',
-              right: '8px',
-              width: '4em',
-              height: '4em',
-              border: 'none',
-              background: 'rgba(180, 83, 107, 0.11)',
-              borderRadius: '5px',
-              transition: 'background 0.5s',
-              zIndex: 50
-            }}
+            className="absolute top-4 right-4 p-2 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
+            aria-label="Close"
           >
-            <span 
-              className="X"
-              style={{
-                content: "",
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '2em',
-                height: '1.5px',
-                backgroundColor: 'rgb(255, 255, 255)',
-                transform: 'translateX(-50%) rotate(45deg)'
-              }}
-            ></span>
-            <span 
-              className="Y"
-              style={{
-                content: "",
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '2em',
-                height: '1.5px',
-                backgroundColor: '#fff',
-                transform: 'translateX(-50%) rotate(-45deg)'
-              }}
-            ></span>
-          </motion.button>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </motion.div>
       )}
     </AnimatePresence>,
