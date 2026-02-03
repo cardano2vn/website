@@ -37,7 +37,7 @@ export default function LandingContentSection({ content }: LandingContentSection
   };
 
   return (
-    <div className="space-y-6 rounded-2xl bg-white/80 dark:bg-slate-950/70 backdrop-blur-sm px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10 transition-colors">
+    <div className="space-y-6">
       {content.title ? (
         <h1 className={`mb-4 lg:mb-6 font-bold text-gray-900 dark:text-white ${titleSize}`}>
           {content.title}
@@ -56,14 +56,14 @@ export default function LandingContentSection({ content }: LandingContentSection
       <div className="flex flex-col sm:flex-row gap-4 mt-6 lg:mt-8">
         <Link
           href={routers.service}
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-white px-6 lg:px-8 py-3 lg:py-4 font-semibold text-white dark:text-blue-900 shadow-xl hover:bg-blue-700 dark:hover:bg-gray-100 text-base lg:text-lg"
+          className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-white shadow-xl hover:bg-blue-700 dark:hover:bg-blue-600 text-base lg:text-lg transition-colors"
         >
           About Us
         </Link>
         <button
           type="button"
           onClick={scrollToContact}
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-white dark:bg-gray-800 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-gray-900 dark:text-white shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm lg:text-base"
+          className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-gray-900 dark:text-white shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm lg:text-base transition-colors"
           aria-label="Register our course"
         >
           Register our course

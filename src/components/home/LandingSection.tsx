@@ -91,11 +91,11 @@ export default function LandingSection() {
 
   return (
     <>
-      <section id="Landing" className="scroll-mt-28 md:scroll-mt-40 bg-white dark:bg-gray-50 w-full min-w-0 overflow-x-hidden">
-        <div className="mx-auto max-w-7xl w-full min-w-0 px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+      <section id="Landing" className="relative flex min-h-[80vh] items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-x-hidden">
+        <div className="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
           <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:grid-cols-2 lg:gap-16 items-center min-w-0">
             <LandingContentSection content={content} />
-            <div className="hidden lg:block relative aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-200">
+            <div className="hidden lg:block relative aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
               {currentSlide && (
                 <img
                   key={currentSlide.url}
@@ -114,7 +114,7 @@ export default function LandingSection() {
                       className={`h-1.5 rounded-full transition-all ${
                         i === slideIndex
                           ? "w-6 bg-blue-600 dark:bg-blue-400"
-                          : "w-1.5 bg-white/70 hover:bg-white/90"
+                          : "w-1.5 bg-white/70 dark:bg-white/30 hover:bg-white/90 dark:hover:bg-white/50"
                       }`}
                       aria-label={`Slide ${i + 1}`}
                     />

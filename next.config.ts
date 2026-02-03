@@ -7,8 +7,30 @@ const withMDX = createMDX();
 const config: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["lucid-cardano"],
+  serverExternalPackages: [
+    "@prisma/client",
+    "prisma",
+    "@emurgo/cardano-serialization-lib-asmjs",
+    "@emurgo/cardano-serialization-lib-browser",
+    "@meshsdk/core",
+    "ethers",
+  ],
   experimental: {
-    optimizePackageImports: ["@tanstack/react-query", "lucide-react", "framer-motion"],
+    optimizePackageImports: [
+      "@tanstack/react-query",
+      "lucide-react",
+      "framer-motion",
+      "lodash",
+      "katex",
+      "recharts",
+      "swiper",
+      "highlight.js",
+      "lowlight",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-select",
+      "@radix-ui/react-tabs",
+    ],
   },
   webpack: (config, { isServer }) => {
     config.experiments = { ...config.experiments, topLevelAwait: true };
