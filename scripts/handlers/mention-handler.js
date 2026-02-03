@@ -31,7 +31,6 @@ class MentionHandler {
            email: true,
            wallet: true,
            image: true,
-           provider: true,
            isBanned: true,
          },
          take: actualLimit,
@@ -44,14 +43,14 @@ class MentionHandler {
 
         const formattedUsers = users.map(user => ({
          id: user.id,
-         name: user.name || user.email || user.wallet || 'Unknown User',
-         email: user.email,
-         wallet: user.wallet,
+         name: user.name || 'User',
+         email: null,
+         wallet: null,
          image: user.image,
-         provider: user.provider,
+         provider: null,
          isBanned: user.isBanned || false,
-         displayName: user.name || user.email || user.wallet || 'Unknown User',
-         searchText: `${user.name || ''} ${user.email || ''} ${user.wallet || ''}`.trim(),
+         displayName: user.name || 'User',
+         searchText: (user.name || '').trim(),
        }));
 
       const client = this.server.clients.get(clientId);

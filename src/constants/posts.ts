@@ -69,6 +69,7 @@ export interface BlogPost {
   createdAt: string;
   media?: BlogMedia[];
   tags?: BlogTag[];
+  totalViews?: number;
 }
 
 export interface BlogMedia {

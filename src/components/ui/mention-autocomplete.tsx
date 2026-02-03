@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import type { RefObject } from 'react';
 import { MentionUser } from '~/lib/mention-utils';
 
 interface MentionAutocompleteProps {
@@ -10,6 +12,14 @@ interface MentionAutocompleteProps {
   onClose: () => void;
   position: { x: number; y: number };
   inputWidth?: number;
+  inputRef?: RefObject<HTMLInputElement | null>;
+}
+
+function getInputRect(inputRef: RefObject<HTMLInputElement | null>) {
+  const el = inputRef?.current;
+  if (!el) return null;
+  const rect = el.getBoundingClientRect();
+  return { x: rect.left, y: rect.bottom + 4 };
 }
 
 export default function MentionAutocomplete({
@@ -18,7 +28,8 @@ export default function MentionAutocomplete({
   onSelect,
   onClose,
   position,
-  inputWidth
+  inputWidth,
+  inputRef,
 }: MentionAutocompleteProps) {
   const [users, setUsers] = useState<MentionUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,8 +37,28 @@ export default function MentionAutocomplete({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [fixedPos, setFixedPos] = useState(position);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    const update = () => {
+      if (inputRef) {
+        const next = getInputRect(inputRef);
+        if (next) setFixedPos(next);
+      } else {
+        setFixedPos(position);
+      }
+    };
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [isVisible, inputRef, position.x, position.y]);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -152,9 +183,10 @@ export default function MentionAutocomplete({
 
      useEffect(() => {
      const handleClickOutside = (e: MouseEvent) => {
-       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-         onClose();
-       }
+       const target = e.target as Node;
+       if (dropdownRef.current?.contains(target)) return;
+       if (inputRef?.current?.contains(target)) return;
+       onClose();
      };
 
      const handleScroll = (e: Event) => {
@@ -184,36 +216,20 @@ export default function MentionAutocomplete({
   if (!isVisible) {
     return null;
   }
-  
-  
-  return (
-    <>
-      {/* Debug element to confirm rendering */}
-      {/* <div 
-        style={{
-          position: 'fixed',
-          left: position.x,
-          top: position.y - 20,
-          width: '10px',
-          height: '10px',
-          backgroundColor: 'red',
-          zIndex: 10000,
-        }}
-        title="Debug: Dropdown should be below this red dot"
-      /> */}
-      
-        <div
-          ref={dropdownRef}
-          className="absolute z-[9999] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto scrollbar-hide"
-          style={{
-            left: position.x,
-            top: position.y,
-            position: 'absolute',
-            zIndex: 9999,
-            width: inputWidth ? `${inputWidth}px` : '100%',
-            minWidth: '300px',
-          }}
-        >
+
+  const dropdown = (
+    <div
+      ref={dropdownRef}
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto scrollbar-hide"
+      style={{
+        position: 'fixed',
+        left: fixedPos.x,
+        top: fixedPos.y,
+        zIndex: 99999,
+        width: inputWidth ? `${inputWidth}px` : '300px',
+        minWidth: '300px',
+      }}
+    >
              {loading ? (
          <div className="py-1">
            {Array.from({ length: 5 }).map((_, index) => (
@@ -261,9 +277,6 @@ export default function MentionAutocomplete({
                        </span>
                      )}
                    </div>
-                   <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                     {user.email && user.email !== user.displayName ? user.email : user.wallet || user.provider}
-                   </div>
                  </div>
                </button>
              ))}
@@ -290,6 +303,8 @@ export default function MentionAutocomplete({
            </div>
          )}
        </div>
-     </>
-   );
- }
+  );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(dropdown, document.body);
+}

@@ -2,31 +2,18 @@
 
 import { useState, useRef, useEffect } from "react";
 
-import { ReplySkeleton } from "./CommentSkeleton";
-
 import { useToastContext } from "../toast-provider";
 import { useUser } from '~/hooks/useUser';
 import Modal from '../admin/common/Modal';
 import { Comment, CommentItemProps, MAX_COMMENT_LENGTH } from '~/constants/comment';
 import MentionAutocomplete from '~/components/ui/mention-autocomplete';
 import MentionDisplay from '~/components/ui/mention-display';
-import { 
-  MentionUser, 
-  hasMentionTrigger, 
-  extractMentionQuery, 
-  insertMention, 
-  calculateMentionPosition,
-  formatMentionsForStorage
-} from '~/lib/mention-utils';
-import { convertTextToEmoji, EMOJI_CATEGORIES, handleEmojiConversion, convertTextToEmojiOnSubmit } from '~/lib/emoji-converter';
+import { MentionUser, hasMentionTrigger, extractMentionQuery, insertMention, calculateMentionPosition, formatMentionsForStorage } from '~/lib/mention-utils';
+import { handleEmojiConversion, convertTextToEmojiOnSubmit } from '~/lib/emoji-converter';
 
-
-const formatTime = (iso: string) => {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
+const formatTime = (iso: string) => (!iso ? '' : (() => { const d = new Date(iso); const p = (n: number) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; })());
+const shortAddr = (s: string) => s.length > 16 ? `${s.slice(0, 6)}...${s.slice(-6)}` : s;
+const getAvatar = (c: Comment) => (c.user?.image?.startsWith('http') || c.user?.image?.startsWith('data:') ? c.user.image : c.avatar?.startsWith('http') || c.avatar?.startsWith('data:') ? c.avatar : '') || '';
 
 export default function CommentItem({ comment, onSubmitReply, onDeleteComment, onUpdateComment, user, activeReplyId, setActiveReplyId, depth = 0, hoveredId, setHoveredId }: CommentItemProps) {
   const [replyText, setReplyText] = useState("");
@@ -34,76 +21,27 @@ export default function CommentItem({ comment, onSubmitReply, onDeleteComment, o
   const [expandedComment, setExpandedComment] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const { showSuccess, showError } = useToastContext();
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+  const [showMention, setShowMention] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
-  const [mentionPosition, setMentionPosition] = useState({ x: 0, y: 0 });
-  const [cursorPosition, setCursorPosition] = useState(0);
-  const [mentionsInInput, setMentionsInInput] = useState<Array<{ id: string; name: string; displayName: string }>>([]);
-  const [activeEmojiCategory, setActiveEmojiCategory] = useState<string>('Faces');
-  const replyInputRef = useRef<HTMLInputElement>(null);
-  
-  const handleEmojiClick = (emoji: string) => {
-    setReplyText((prev) => prev + emoji);
-    setShowEmojiPicker(false);
-  };
+  const [mentionPos, setMentionPos] = useState({ x: 0, y: 0 });
+  const [cursorPos, setCursorPos] = useState(0);
+  const [mentions, setMentions] = useState<Array<{ id: string; name: string; displayName: string }>>([]);
+  const replyRef = useRef<HTMLInputElement>(null);
 
-  const handleReplyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const cursorPos = e.target.selectionStart || 0;
-    
-    const { convertedText, newCursorPosition, shouldConvert } = handleEmojiConversion(value, cursorPos);
-    
-    if (shouldConvert) {
-      setReplyText(convertedText);
-      setCursorPosition(newCursorPosition);
-      
-      setTimeout(() => {
-        if (replyInputRef.current) {
-          replyInputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-        }
-      }, 0);
-    } else {
-      setReplyText(value);
-      setCursorPosition(cursorPos);
-    }
-    
-    if (hasMentionTrigger(convertedText, newCursorPosition)) {
-      const query = extractMentionQuery(convertedText, newCursorPosition);
-      if (query !== null) {
-        setMentionQuery(query);
-        
-        if (replyInputRef.current) {
-          const position = calculateMentionPosition(replyInputRef.current, newCursorPosition, convertedText);
-          setMentionPosition(position);
-        }
-        
-        setShowMentionDropdown(true);
-      }
-    } else {
-      setShowMentionDropdown(false);
-    }
+  const onReplyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value, pos = e.target.selectionStart ?? 0;
+    const { convertedText, newCursorPosition, shouldConvert } = handleEmojiConversion(v, pos);
+    if (shouldConvert) { setReplyText(convertedText); setCursorPos(newCursorPosition); setTimeout(() => replyRef.current?.setSelectionRange(newCursorPosition, newCursorPosition), 0); }
+    else { setReplyText(v); setCursorPos(pos); }
+    if (hasMentionTrigger(convertedText, shouldConvert ? newCursorPosition : pos)) {
+      const q = extractMentionQuery(convertedText, shouldConvert ? newCursorPosition : pos);
+      if (q !== null) { setMentionQuery(q); if (replyRef.current) setMentionPos(calculateMentionPosition(replyRef.current, newCursorPosition, convertedText)); setShowMention(true); }
+    } else setShowMention(false);
   };
-
-  const handleMentionSelect = (selectedUser: MentionUser) => {
-    const { newText, newCursorPosition, insertedMention } = insertMention(replyText, cursorPosition, mentionQuery, selectedUser);
-    
-    setReplyText(newText);
-    setMentionsInInput(prev => [...prev, insertedMention]);
-    setShowMentionDropdown(false);
-    setMentionQuery("");
-    
-    setTimeout(() => {
-      if (replyInputRef.current) {
-        replyInputRef.current.focus();
-        replyInputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-      }
-    }, 0);
-  };
-
-  const handleMentionClose = () => {
-    setShowMentionDropdown(false);
-    setMentionQuery("");
+  const onMentionSelect = (u: MentionUser) => {
+    const { newText, newCursorPosition, insertedMention } = insertMention(replyText, cursorPos, mentionQuery, u);
+    setReplyText(newText); setMentions(prev => [...prev, insertedMention]); setShowMention(false); setMentionQuery("");
+    setTimeout(() => { replyRef.current?.focus(); replyRef.current?.setSelectionRange(newCursorPosition, newCursorPosition); }, 0);
   };
 
   const { isAuthenticated, user: currentUser } = useUser();
@@ -111,8 +49,6 @@ export default function CommentItem({ comment, onSubmitReply, onDeleteComment, o
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
-  const canEdit = currentUser && currentUser.id === comment.userId;
-  const isUserBanned = currentUser && currentUser.isBanned && currentUser.bannedUntil && new Date(currentUser.bannedUntil) > new Date();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -128,260 +64,78 @@ export default function CommentItem({ comment, onSubmitReply, onDeleteComment, o
     }
   }, [comment.id]);
 
-  const handleEdit = () => {
-    setEditText(comment.content);
-    setEditing(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditing(false);
-    setEditText(comment.content);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editText.trim()) {
-      showError('Content cannot be empty');
-      return;
-    }
-    
-    if (onUpdateComment) {
-      try {
-        await onUpdateComment(comment.id, editText);
-        setEditing(false);
-      } catch (error) {
-        showError('Update error', 'An error occurred while updating the comment.');
-      }
-    } else {
-      showError('Update error', 'WebSocket not available for update.');
-    }
-  };
-
-  const handleSubmitReply = async (e: React.FormEvent, commentId: string) => {
+  const submitReply = async (e: React.FormEvent, commentId: string) => {
     e.preventDefault();
-    if (replyText.trim()) {
-      const convertedText = convertTextToEmojiOnSubmit(replyText);
-      const storageText = formatMentionsForStorage(convertedText, mentionsInInput);
-      await onSubmitReply(commentId, storageText, user || {});
-      setReplyText("");
-      setMentionsInInput([]);
-      setActiveReplyId(null);
-      setShowMentionDropdown(false);
-    }
+    if (!replyText.trim()) return;
+    const storage = formatMentionsForStorage(convertTextToEmojiOnSubmit(replyText), mentions);
+    await onSubmitReply(commentId, storage, user || {});
+    setReplyText(""); setMentions([]); setActiveReplyId(null); setShowMention(false);
   };
-
-  const handleReplyClick = () => {
-    if (!isAuthenticated) {
-      showError('You need to sign in to reply to a comment!');
-      return;
-    }
+  const onReplyClick = () => {
+    if (!isAuthenticated) { showError('Sign in to reply'); return; }
     setActiveReplyId(activeReplyId === comment.id ? null : comment.id);
-    if (activeReplyId !== comment.id) {
-      const displayName = comment.user?.displayName || comment.author || comment.userId;
-      if (displayName) {
-        setReplyText(`@${displayName} `);
-      } else {
-        setReplyText("");
-      }
-    } else {
-      setReplyText("");
-    }
+    setReplyText(activeReplyId === comment.id ? '' : `@${comment.user?.displayName || comment.author || comment.userId || ''} `);
   };
-
-  const loadMoreReplies = () => {
-    setLoadingReplies(true);
-    setTimeout(() => {
-      const currentVisible = visibleReplies;
-      setVisibleReplies(Math.min(currentVisible + 3, comment.replies?.length || 0));
-      setLoadingReplies(false);
-    }, 1000);
-  };
-
-  const toggleCommentExpansion = () => {
-    setExpandedComment(!expandedComment);
-  };
-
-  const renderCommentContent = (content: string) => {
-    const shouldTruncate = content.length > MAX_COMMENT_LENGTH;
-    
-    if (!shouldTruncate) {
-      return (
-        <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
-          <MentionDisplay content={content} />
-        </p>
-      );
-    }
-
-    return (
-      <div>
-        <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
-          <MentionDisplay content={expandedComment ? content : `${content.substring(0, MAX_COMMENT_LENGTH)}...`} />
-        </p>
-        <button
-          onClick={toggleCommentExpansion}
-          className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium mt-1"
-        >
-          {expandedComment ? "Show less" : "Show more"}
-        </button>
-      </div>
-    );
-  };
-
-
-  const shortAddress = (addr: string) => addr.length > 16 ? `${addr.slice(0, 6)}...${addr.slice(-6)}` : addr;
-
-  const isHoveredReply = hoveredId === comment.id && !!comment.parentCommentId;
-  const isParentHighlight = hoveredId && hoveredId === comment.parentCommentId;
-
-  const avatarUrl =
-    (comment.user?.image && (comment.user.image.startsWith('http') || comment.user.image.startsWith('data:image')))
-      ? comment.user.image
-      : (comment.avatar && (comment.avatar.startsWith('http') || comment.avatar.startsWith('data:image')))
-        ? comment.avatar
-        : '';
-  const emojiButtonRef = useRef<HTMLButtonElement>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        showEmojiPicker &&
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target as Node) &&
-        emojiButtonRef.current &&
-        !emojiButtonRef.current.contains(event.target as Node)
-      ) {
-        setShowEmojiPicker(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showEmojiPicker]);
-
-
-  const maxIndentMobile = 8; 
-  const maxIndentDesktop = 12; 
-  const indentMobile = Math.min((depth + 1) * 4, maxIndentMobile);
-  const indentDesktop = Math.min((depth + 1) * 6, maxIndentDesktop); 
-
-  const canDelete = currentUser && (currentUser.role === 'ADMIN' || currentUser.id === comment.userId);
-
+  const loadMore = () => { setLoadingReplies(true); setTimeout(() => { setVisibleReplies(v => Math.min(v + 3, comment.replies?.length ?? 0)); setLoadingReplies(false); }, 1000); };
+  const copy = (text: string) => { navigator.clipboard.writeText(text); showSuccess('Copied!'); };
   const handleDelete = async () => {
     setShowDeleteModal(false);
-    
-    if (onDeleteComment) {
-      try {
-        await onDeleteComment(comment.id);
-        setDeleted(true);
-      } catch (error) {
-        showError('Delete error', 'An error occurred while deleting the comment.');
-      }
-    } else {
-      showError('Delete error', 'WebSocket not available for delete.');
-    }
+    if (onDeleteComment) try { await onDeleteComment(comment.id); setDeleted(true); } catch { showError('Delete error'); }
+    else showError('WebSocket not available');
   };
+
+  const canEdit = currentUser?.id === comment.userId;
+  const canDelete = currentUser && (currentUser.role === 'ADMIN' || currentUser.id === comment.userId);
+  const isBanned = currentUser?.isBanned && currentUser?.bannedUntil && new Date(currentUser.bannedUntil) > new Date();
+  const isHovered = hoveredId === comment.id && !!comment.parentCommentId;
+  const isParentHighlight = hoveredId === comment.parentCommentId;
+  const indent = comment.parentCommentId ? 'pl-2 md:pl-4' : '';
+  const truncated = comment.content.length > MAX_COMMENT_LENGTH;
+  const inputCls = "w-full rounded-xl bg-gray-200/50 dark:bg-gray-700/50 border border-gray-300/50 dark:border-gray-600/50 p-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-500/50 text-sm";
 
   if (deleted) return null;
 
   return (
     <div
       id={`comment-${comment.id}`}
-      className={comment.parentCommentId ? `relative ml-[${indentMobile}px] md:ml-[${indentDesktop}px]` : ''}
+      className={comment.parentCommentId ? 'relative' : ''}
       style={{ maxWidth: '100%' }}
       onMouseEnter={() => setHoveredId && setHoveredId(comment.id)}
       onMouseLeave={() => setHoveredId && setHoveredId(null)}
     >
       {comment.parentCommentId && (
-        <div className="absolute left-0 top-0 h-full flex items-stretch" style={{width: '16px'}}>
-          <div className={`border-l-2 h-full ml-2 transition-colors duration-200 ${isHoveredReply ? 'border-blue-500 dark:border-blue-400' : 'border-gray-300 dark:border-gray-700'}`}></div>
-        </div>
+        <div className="absolute left-0 top-0 h-full w-4 flex"><div className={`border-l-2 h-full ml-2 transition-colors ${isHovered ? 'border-blue-500 dark:border-blue-400' : 'border-gray-300 dark:border-gray-700'}`} /></div>
       )}
-      <div className={comment.parentCommentId ? 'pl-2 md:pl-4 w-full max-w-full' : 'w-full max-w-full'}>
-        <div className={`space-y-3 transition-colors duration-200 ${isParentHighlight ? 'bg-blue-100/50 dark:bg-blue-900/30' : ''}`} style={{wordBreak: 'break-word'}}>
+      <div className={`${indent} w-full`}>
+        <div className={`space-y-3 ${isParentHighlight ? 'bg-blue-100/50 dark:bg-blue-900/30' : ''}`} style={{ wordBreak: 'break-word' }}>
           <div className="flex items-start gap-3">
-            <img 
-              src={avatarUrl || "/images/common/loading.png"} 
-              alt="avatar" 
-              className="w-8 h-8 rounded-full object-cover flex-shrink-0" 
-            />
+            <img src={getAvatar(comment) || "/images/common/loading.png"} alt="avatar" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="bg-gray-100 dark:bg-gray-800/30 rounded-2xl px-3 py-2">
                 <div className="flex items-center gap-2 mb-1">
-                  {!comment.user?.displayName && !comment.author && (
-                    <span
-                      className="font-semibold text-gray-900 dark:text-white text-xs font-mono cursor-pointer select-all"
-                      title="Copy userId"
-                      onClick={() => {
-                        navigator.clipboard.writeText(comment.userId || '');
-                        showSuccess('Copied!');
-                      }}
-                    >
-                      {shortAddress(comment.userId || '')}
-                    </span>
-                  )}
-                  {(comment.user?.displayName || comment.author) && (
-                    <span
-                      className="font-sans text-blue-600 dark:text-blue-500 text-sm font-medium"
-                      title="Copy name/address"
-                      onClick={() => {
-                        navigator.clipboard.writeText(comment.user?.displayName || comment.author || '');
-                        showSuccess('Copied!');
-                      }}
-                    >
-                      {comment.user?.displayName || comment.author}
-                    </span>
-                  )}
-                  {comment.isPostAuthor && (
-                    <span className="ml-2 italic font-bold text-blue-600 dark:text-blue-500 text-xs">author</span>
-                  )}
-           
-
+                  {!comment.user?.displayName && !comment.author && <span className="font-semibold text-gray-900 dark:text-white text-xs font-mono cursor-pointer select-all" title="Copy" onClick={() => copy(comment.userId || '')}>{shortAddr(comment.userId || '')}</span>}
+                  {(comment.user?.displayName || comment.author) && <span className="text-blue-600 dark:text-blue-500 text-sm font-medium cursor-pointer" title="Copy" onClick={() => copy(comment.user?.displayName || comment.author || '')}>{comment.user?.displayName || comment.author}</span>}
+                  {comment.isPostAuthor && <span className="ml-2 italic font-bold text-blue-600 dark:text-blue-500 text-xs">author</span>}
                 </div>
                 {editing ? (
-                <div className="mt-2 flex flex-col gap-2">
-                  <textarea
-                    className="w-full rounded-xl bg-gray-200/50 dark:bg-gray-700/50 border border-gray-300/50 dark:border-gray-600/50 p-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-500/50 text-sm"
-                    value={editText}
-                    onChange={e => setEditText(e.target.value)}
-                    rows={3}
-                    placeholder="Enter your comment..."
-                  />
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={handleCancelEdit}
-                      className="px-4 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      className="px-4 py-1 rounded bg-blue-500 text-white hover:bg-blue-600"
-                    >
-                      Save
-                    </button>
+                  <div className="mt-2 flex flex-col gap-2">
+                    <textarea className={inputCls} value={editText} onChange={e => setEditText(e.target.value)} rows={3} placeholder="Edit..." />
+                    <div className="flex gap-2 justify-end">
+                      <button type="button" onClick={() => { setEditing(false); setEditText(comment.content); }} className="px-4 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">Cancel</button>
+                      <button type="button" onClick={async () => { if (!editText.trim()) { showError('Content cannot be empty'); return; } if (onUpdateComment) try { await onUpdateComment(comment.id, editText); setEditing(false); } catch { showError('Update error'); } else showError('WebSocket not available'); }} className="px-4 py-1 rounded bg-blue-500 text-white hover:bg-blue-600">Save</button>
+                    </div>
                   </div>
-                </div>
-              ) : renderCommentContent(comment.content)}
+                ) : (
+                  <>
+                    <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed"><MentionDisplay content={truncated && !expandedComment ? `${comment.content.slice(0, MAX_COMMENT_LENGTH)}...` : comment.content} /></p>
+                    {truncated && <button type="button" onClick={() => setExpandedComment(!expandedComment)} className="text-blue-600 dark:text-blue-400 text-sm font-medium mt-1">{expandedComment ? 'Show less' : 'Show more'}</button>}
+                  </>
+                )}
               </div>
               <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                {!isUserBanned && (
-                  <button 
-                    onClick={handleReplyClick}
-                    className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors font-medium"
-                  >
-                    Reply
-                  </button>
-                )}
-                {canEdit && !editing && !isUserBanned && (
-                  <button
-                    onClick={handleEdit}
-                    className="hover:text-yellow-600 dark:hover:text-yellow-400 text-yellow-600 dark:text-yellow-300 transition-colors font-medium ml-2"
-                  >
-                    Edit
-                  </button>
-                )}
-                {canDelete && !isUserBanned && (
+                {!isBanned && <button type="button" onClick={onReplyClick} className="font-medium hover:text-gray-700 dark:hover:text-gray-300">Reply</button>}
+                {canEdit && !editing && !isBanned && <button type="button" onClick={() => { setEditText(comment.content); setEditing(true); }} className="text-yellow-600 dark:text-yellow-400 font-medium ml-2">Edit</button>}
+                {canDelete && !isBanned && (
                   <>
                     <button
                       onClick={() => setShowDeleteModal(true)}
@@ -414,105 +168,24 @@ export default function CommentItem({ comment, onSubmitReply, onDeleteComment, o
                     </Modal>
                   </>
                 )}
-                <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">{formatTime(comment.time || '')}</span>
+                <span className="text-gray-400 dark:text-gray-500 ml-2">{formatTime(comment.time || '')}</span>
               </div>
             </div>
           </div>
 
-          {activeReplyId === comment.id && !isUserBanned && (
+          {activeReplyId === comment.id && !isBanned && (
             <div className="ml-11">
               <div className="bg-gray-100 dark:bg-gray-800/30 rounded-2xl p-3 border border-gray-200 dark:border-gray-700/50">
                 <div className="flex items-start gap-3">
-                  <img 
-                    src={user?.image || "/images/common/loading.png"} 
-                    alt="avatar" 
-                    className="w-6 h-6 rounded-full object-cover flex-shrink-0" 
-                  />
+                  <img src={user?.image || "/images/common/loading.png"} alt="avatar" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
                   <div className="flex-1 relative">
-                    <form onSubmit={(e) => handleSubmitReply(e, comment.id)} className="relative">
+                    <form onSubmit={e => submitReply(e, comment.id)}>
                       <div className="relative">
-                        <input
-                          ref={replyInputRef}
-                          type="text"
-                          value={replyText}
-                          onChange={handleReplyInputChange}
-                          placeholder="Write a reply... Use @ to mention users"
-                          className="w-full rounded-xl bg-gray-200/50 dark:bg-gray-700/50 border border-gray-300/50 dark:border-gray-600/50 pl-4 pr-10 py-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-500/50 text-sm"
-                          autoFocus
-                        />
-   
-                        <button
-                          type="button"
-                          onClick={() => setShowEmojiPicker && setShowEmojiPicker((v: boolean) => !v)}
-                          className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors p-1"
-                          title="Add emoji"
-                          tabIndex={-1}
-                          ref={emojiButtonRef}
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.415 0 3 3 0 014.242 0 1 1 0 001.415-1.415 5 5 0 00-7.072 0 1 1 0 000 1.415z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        <button 
-                          type="submit"
-                          disabled={!replyText.trim()}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed transition-colors p-1"
-                          aria-label="Send reply"
-                        >
-                          <svg className="h-4 w-4 rotate-90" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                          </svg>
-                        </button>
-                        {showEmojiPicker && (
-                          <div
-                            className="absolute z-50 right-10 top-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-80"
-                            ref={emojiPickerRef}
-                          >
-                            {/* Category Tabs */}
-                            <div className="flex border-b border-gray-200 dark:border-gray-700">
-                              {Object.keys(EMOJI_CATEGORIES).map((category) => (
-                                <button
-                                  key={category}
-                                  onClick={() => setActiveEmojiCategory(category)}
-                                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                                    activeEmojiCategory === category
-                                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-b-2 border-blue-500'
-                                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                  }`}
-                                >
-                                  {category}
-                                </button>
-                              ))}
-                            </div>
-                            
-                            {/* Emoji Grid */}
-                            <div className="p-3 max-h-60 overflow-y-auto scrollbar-hide">
-                              <div className="grid grid-cols-8 gap-1">
-                                {Object.entries(EMOJI_CATEGORIES[activeEmojiCategory as keyof typeof EMOJI_CATEGORIES]).map(([shortcut, emoji], index) => (
-                                  <button
-                                    key={index}
-                                    onClick={() => handleEmojiClick && handleEmojiClick(emoji)}
-                                    className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors text-lg"
-                                    title={`${emoji} (${shortcut})`}
-                                  >
-                                    {emoji}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                        <input ref={replyRef} type="text" value={replyText} onChange={onReplyChange} placeholder="Write a reply... @ to mention" className={inputCls + ' pl-4 pr-10'} autoFocus />
+                        <button type="submit" disabled={!replyText.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed p-1" aria-label="Send"><svg className="h-4 w-4 rotate-90" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg></button>
                       </div>
                     </form>
-                    
-                    <MentionAutocomplete
-                      isVisible={showMentionDropdown}
-                      query={mentionQuery}
-                      onSelect={handleMentionSelect}
-                      onClose={handleMentionClose}
-                      position={mentionPosition}
-                      inputWidth={replyInputRef.current?.offsetWidth}
-                    />
+                    <MentionAutocomplete isVisible={showMention} query={mentionQuery} onSelect={onMentionSelect} onClose={() => { setShowMention(false); setMentionQuery(""); }} position={mentionPos} inputWidth={replyRef.current?.offsetWidth} inputRef={replyRef} />
                   </div>
                 </div>
               </div>
@@ -537,27 +210,8 @@ export default function CommentItem({ comment, onSubmitReply, onDeleteComment, o
                 />
               ))}
 
-              {comment.replies.length > visibleReplies && !loadingReplies && (
-                <div>
-                  <button
-                    onClick={loadMoreReplies}
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
-                  >
-                    Load {Math.min(3, comment.replies.length - visibleReplies)} more replies
-                  </button>
-                </div>
-              )}
-
-
-              {loadingReplies && (
-                <div className="space-y-3">
-                  {Array.from({ length: Math.min(3, comment.replies.length - visibleReplies) }).map((_, index) => (
-                    <ReplySkeleton key={`skeleton-${index}`} />
-                  ))}
-                </div>
-              )}
-
-
+              {comment.replies.length > visibleReplies && !loadingReplies && <button type="button" onClick={loadMore} className="text-blue-600 dark:text-blue-400 text-sm font-medium">Load {Math.min(3, comment.replies.length - visibleReplies)} more</button>}
+              {loadingReplies && <div className="text-sm text-gray-500 dark:text-gray-400 py-2">Loading...</div>}
             </div>
           )}
         </div>

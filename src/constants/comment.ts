@@ -59,8 +59,4 @@ export interface CommentSectionProps {
   targetCommentId?: string | null;
 }
 
-export interface CommentSkeletonListProps {
-  count?: number;
-}
-
 export const MAX_COMMENT_LENGTH = 200; 

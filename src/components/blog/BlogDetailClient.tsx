@@ -1,630 +1,304 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import { flushSync } from "react-dom";
-import dynamic from "next/dynamic";
-import { motion, AnimatePresence } from "framer-motion";
 
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, MessageCircle, Share2, ThumbsUp } from "lucide-react";
-import { REACTION_ICONS } from "~/constants/posts";
-import Header from "~/components/header";
-import ShareModal from "~/components/blog/ShareModal";
-import CommentSection from "~/components/blog/CommentSection";
-import ReactionCount from "~/components/blog/ReactionCount";
-import BlogDetailSkeleton from "~/components/blog/BlogDetailSkeleton";
-import RelatedPostsSlider from "~/components/blog/RelatedPostsSlider";
-import LatestPostsSidebar from "~/components/blog/LatestPostsSidebar";
+import { ArrowLeft, Share2, ThumbsUp } from "lucide-react";
 import { useSession } from "next-auth/react";
-
-const ServiceAdCard = dynamic(
-  () => import("~/components/blog/ServiceAdCard"),
-  { ssr: false }
-);
-import { useToastContext } from '~/components/toast-provider';
-import { TipTapPreview } from '~/components/ui/tiptap-preview';
-import { useQuery } from '@tanstack/react-query';
-import { BlogPostDetail, BlogTag } from '~/constants/posts';
-import { Comment } from '~/constants/comment';
-import { scrollToCommentWithRetry } from '~/lib/mention-highlight';
+import { useQuery } from "@tanstack/react-query";
+import { REACTION_ICONS } from "~/constants/posts";
+import { BlogPostDetail } from "~/constants/posts";
+import { Comment } from "~/constants/comment";
+import { useToastContext } from "~/components/toast-provider";
+import { TipTapPreview } from "~/components/ui/tiptap-preview";
+import { scrollToCommentWithRetry } from "~/lib/mention-highlight";
+import Header from "~/components/header";
 import BackgroundMotion from "~/components/ui/BackgroundMotion";
-// client-side seen storage removed; rely on API only
+import CommentSection from "~/components/blog/CommentSection";
+import OlderNewsList from "~/components/blog/OlderNewsList";
+
+const VI_WEEKDAY = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+const formatDate = (s: string) => {
+  const d = new Date(s);
+  return `${VI_WEEKDAY[d.getDay()] ?? ""} - ${d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })} ${d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+};
+const ytId = (url: string) => url?.match(/(?:youtube\.com\/.*[?&]v=|youtu\.be\/)([^"&?\/#\s]{11})/)?.[1] ?? "";
+
+const REACTIONS = [
+  { image: "/images/reaction/like.png", type: "LIKE" },
+  { image: "/images/reaction/tym.png", type: "HEART" },
+  { image: "/images/reaction/haha.png", type: "HAHA" },
+  { image: "/images/reaction/wow.png", type: "WOW" },
+  { image: "/images/reaction/sad.png", type: "SAD" },
+  { image: "/images/reaction/angry.png", type: "ANGRY" },
+] as const;
+
+type RawComment = { id: string; text?: string; content?: string; createdAt?: string; userId?: string; user?: { wallet?: string; image?: string; displayName?: string } | null; parentCommentId?: string | null; author?: string; avatar?: string };
+function toFlat(cs: RawComment[]): Comment[] {
+  return cs.map((c) => ({
+    id: c.id,
+    content: c.text ?? c.content ?? "",
+    createdAt: c.createdAt ?? "",
+    userId: c.userId ?? "",
+    user: c.user ?? null,
+    parentCommentId: c.parentCommentId ?? null,
+    replies: [],
+    author: c.user?.wallet ?? c.author ?? "",
+    avatar: c.user?.image ?? c.avatar ?? "",
+  }));
+}
+function toNested(flat: Comment[], authorId: string, authorWallet?: string): Comment[] {
+  const map = new Map<string, Comment & { replies: Comment[]; parentUserId?: string; parentAuthor?: string }>();
+  flat.forEach((c) => map.set(c.id, { ...c, replies: [] }));
+  const roots: (Comment & { replies: Comment[]; parentUserId?: string; parentAuthor?: string })[] = [];
+  const getDepth = (c: Comment): number => {
+    let d = 1, cur: Comment | undefined = c;
+    while (cur?.parentCommentId) {
+      cur = map.get(cur.parentCommentId);
+      if (!cur) break;
+      d++;
+    }
+    return d;
+  };
+  flat.forEach((c) => {
+    if (!c.parentCommentId) {
+      roots.push(map.get(c.id)!);
+      return;
+    }
+    let parent = map.get(c.parentCommentId);
+    if (getDepth(c) > 3 && parent) {
+      let cur = map.get(c.id)!;
+      let d = getDepth(c);
+      while (d > 3 && cur.parentCommentId) {
+        cur = map.get(cur.parentCommentId)!;
+        d--;
+      }
+      parent = cur;
+    }
+    if (parent) {
+      const node = map.get(c.id)!;
+      node.parentUserId = parent.userId;
+      node.parentAuthor = parent.user?.wallet ?? parent.author ?? "";
+      (parent.replies ??= []).push(node);
+    }
+  });
+  roots.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const mapOne = (c: Comment & { replies?: Comment[] }): Comment => ({
+    ...c,
+    author: c.userId && c.userId === authorId ? (authorWallet ?? c.user?.wallet ?? c.author ?? "") : (c.user?.displayName ?? c.user?.wallet ?? c.author ?? ""),
+    isPostAuthor: !!(c.userId && authorId && c.userId === authorId),
+    replies: (c.replies ?? []).map(mapOne),
+  });
+  return roots.map(mapOne);
+}
+
+const blueBtn = "inline-flex items-center gap-2 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium transition-colors disabled:opacity-50";
 
 export default function BlogDetailClient({ slug }: { slug: string }) {
   const { data: session } = useSession();
-  const isLoggedIn = !!session?.user;
-  const [showReactions, setShowReactions] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [showAllComments, setShowAllComments] = useState(true);
-  const [isReacting, setIsReacting] = useState(false);
-  const proseRef = useRef<HTMLDivElement>(null);
   const { showSuccess, showError } = useToastContext();
-  const [hasSeen, setHasSeen] = useState(false);
-  const [totalViews, setTotalViews] = useState<number | null>(null);
+  const [showReactions, setShowReactions] = useState(false);
+  const [isReacting, setIsReacting] = useState(false);
+  const [showAllComments] = useState(true);
+  const proseRef = useRef<HTMLDivElement>(null);
+  const reactionWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const run = async () => {
-      try {
-        if (!slug) return;
-        if (isLoggedIn) {
-          await fetch('/api/blog/seen', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ postId: slug }),
-            credentials: 'include',
-          }).catch(() => {});
-          const res = await fetch(`/api/blog/seen?postId=${encodeURIComponent(slug)}`, { credentials: 'include' });
-          const data = await res.json().catch(() => ({}));
-          setHasSeen(!!data?.data?.seen);
-          if (typeof data?.data?.totalViews === 'number') setTotalViews(data.data.totalViews);
-        } else {
-          setHasSeen(false);
-        }
-      } catch {}
+    const handleClickOutside = (e: MouseEvent) => {
+      if (reactionWrapRef.current && !reactionWrapRef.current.contains(e.target as Node)) setShowReactions(false);
     };
-    run();
-  }, [slug, isLoggedIn]);
+    if (showReactions) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showReactions]);
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash && hash.startsWith('#comment-')) {
-        const commentId = hash.replace('#comment-', '');
-        setTimeout(() => {
-          scrollToCommentWithRetry(commentId);
-        }, 1000);
-      }
+    if (!slug || !session?.user) return;
+    fetch("/api/blog/seen", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postId: slug }), credentials: "include" }).catch(() => {});
+    fetch(`/api/blog/seen?postId=${encodeURIComponent(slug)}`, { credentials: "include" })
+      .then((r) => r.json().catch(() => ({})))
+      .then((data) => {});
+  }, [slug, session?.user]);
+
+  useEffect(() => {
+    const onHash = () => {
+      const id = window.location.hash.replace("#comment-", "");
+      if (id) setTimeout(() => scrollToCommentWithRetry(id), 1000);
     };
-
-    handleHashChange();
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    onHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  const {
-    data: postData,
-    isLoading: loadingPost,
-    refetch: refetchPost,
-  } = useQuery({
-    queryKey: ['public-post-detail', slug],
-    queryFn: async () => {
-      const res = await fetch(`/api/admin/posts/${slug}?public=1`);
-      if (!res.ok) throw new Error('Failed to fetch post');
-      return res.json();
-    },
+  const { data: postData, refetch: refetchPost } = useQuery({
+    queryKey: ["public-post-detail", slug],
+    queryFn: () => fetch(`/api/admin/posts/${slug}?public=1`).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Failed")))),
     enabled: !!slug,
     staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
   });
-  const post: BlogPostDetail | null = postData?.data || null;
+  const post: BlogPostDetail | null = postData?.data ?? null;
 
-  const {
-    data: reactionsData,
-    refetch: refetchReactions,
-  } = useQuery({
-    queryKey: ['post-reactions', slug],
-    queryFn: async () => {
-      const res = await fetch(`/api/blog/react?postId=${slug}`);
-      if (!res.ok) throw new Error('Failed to fetch reactions');
-      return res.json();
-    },
+  const { data: reactData, refetch: refetchReactions } = useQuery({
+    queryKey: ["post-reactions", slug],
+    queryFn: () => fetch(`/api/blog/react?postId=${slug}`).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Failed")))),
     enabled: !!slug,
     staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
   });
-  const reactions: { [type: string]: number } = reactionsData?.data?.reactions || {};
+  const reactions: Record<string, number> = reactData?.data?.reactions ?? {};
 
-  const {
-    data: currentUserReactionData,
-    refetch: refetchCurrentUserReaction,
-  } = useQuery({
-    queryKey: ['post-current-user-reaction', slug, isLoggedIn],
-    queryFn: async () => {
-      if (!isLoggedIn) return { currentUserReaction: null };
-      const res = await fetch(`/api/blog/react?postId=${slug}&me=1`);
-      if (!res.ok) throw new Error('Failed to fetch current user reaction');
-      return res.json();
-    },
-    enabled: !!slug && isLoggedIn,
+  const { data: meReactData, refetch: refetchMeReact } = useQuery({
+    queryKey: ["post-current-user-reaction", slug, !!session?.user],
+    queryFn: () => (session?.user ? fetch(`/api/blog/react?postId=${slug}&me=1`).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Failed")))) : Promise.resolve({ data: { currentUserReaction: null } })),
+    enabled: !!slug && !!session?.user,
     staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
   });
-  const currentUserReaction: string | null = currentUserReactionData?.data?.currentUserReaction || null;
+  const currentUserReaction: string | null = meReactData?.data?.currentUserReaction ?? null;
 
-  const {
-    data: relatedPostsData,
-    isLoading: loadingRelatedPosts,
-  } = useQuery({
-    queryKey: ['related-posts', slug, post?.tags],
-    queryFn: async () => {
-      if (!post?.tags || post.tags.length === 0) return { data: [] };
-      const tagNames = post.tags.map(tag => typeof tag === 'string' ? tag : tag.name);
-      const tagParams = tagNames.map(tag => `tags=${encodeURIComponent(tag)}`).join('&');
-      const res = await fetch(`/api/admin/posts?public=1&${tagParams}&exclude=${slug}&limit=4`);
-      if (!res.ok) throw new Error('Failed to fetch related posts');
-      return res.json();
+  const { data: relatedData } = useQuery({
+    queryKey: ["related-posts", slug, post?.tags],
+    queryFn: () => {
+      if (!post?.tags?.length) return Promise.resolve({ data: [] });
+      const tags = post.tags.map((t) => (typeof t === "string" ? t : t.name)).map((t) => `tags=${encodeURIComponent(t)}`).join("&");
+      return fetch(`/api/admin/posts?public=1&${tags}&exclude=${slug}&limit=6`).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Failed"))));
     },
-    enabled: !!post?.tags && post.tags.length > 0,
+    enabled: !!post?.tags?.length,
     staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
   });
-  const relatedPosts = relatedPostsData?.data || [];
+  const relatedPosts = relatedData?.data ?? [];
 
   useEffect(() => {
-    if (!proseRef.current) return;
-    const prose = proseRef.current;
-    prose.querySelectorAll('.code-copy-btn').forEach(btn => btn.remove());
-    prose.querySelectorAll('pre > code').forEach((codeBlock) => {
-      const pre = codeBlock.parentElement;
+    const el = proseRef.current;
+    if (!el) return;
+    el.querySelectorAll(".code-copy-btn").forEach((b) => b.remove());
+    el.querySelectorAll("pre > code").forEach((code) => {
+      const pre = code.parentElement;
       if (!pre) return;
-      const btn = document.createElement('button');
-      btn.innerHTML = `
-        <span class="flex items-center gap-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2" stroke="currentColor" fill="none"/><rect x="3" y="3" width="13" height="13" rx="2" stroke-width="2" stroke="currentColor" fill="none"/></svg>
-          <span class="font-medium">Copy</span>
-        </span>
-      `;
-      btn.className = 'code-copy-btn absolute top-2 right-2 px-2 py-1 text-xs bg-transparent text-gray-500 rounded shadow hover:bg-blue-500/20 hover:text-blue-600 transition-all duration-150 z-10 flex items-center gap-1';
-      btn.style.position = 'absolute';
-      btn.style.top = '8px';
-      btn.style.right = '8px';
-      btn.onclick = async (e) => {
-        e.stopPropagation();
-        try {
-          await navigator.clipboard.writeText(codeBlock.textContent || '');
-          showSuccess('Copied!');
-        } catch {}
-      };
-      pre.style.position = 'relative';
+      const btn = document.createElement("button");
+      btn.className = "code-copy-btn absolute top-2 right-2 px-2 py-1 text-xs bg-transparent text-gray-500 rounded hover:bg-blue-500/20 hover:text-blue-600 z-10 flex items-center gap-1";
+      btn.innerHTML = '<span class="flex items-center gap-1"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span class="font-medium">Copy</span></span>';
+      btn.onclick = () => navigator.clipboard.writeText(code.textContent ?? "").then(() => showSuccess("Copied!")).catch(() => {});
+      pre.style.position = "relative";
       pre.appendChild(btn);
     });
-  }, [post?.content]);
+  }, [post?.content, showSuccess]);
 
   const handleReact = async (type: string) => {
-    if (!isLoggedIn || !post) {
-      showError('You need to sign in to react!');
+    if (!session?.user || !post) {
+      showError("You need to sign in to react!");
       return;
     }
-    
-    if (isReacting) return; 
-    
+    if (isReacting) return;
     setIsReacting(true);
-    
     try {
-      const res = await fetch("/api/blog/react", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId: slug, type }),
-      });
-      
+      const res = await fetch("/api/blog/react", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postId: slug, type }) });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        showError(data?.error || "Failed to react. Please login and try again.");
+        const err = await res.json().catch(() => ({}));
+        showError(err?.error ?? "Failed to react.");
         return;
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      await refetchReactions();
-      await refetchCurrentUserReaction();
-    } catch (error) {
-      showError("Failed to react. Please try again.");
+      await Promise.all([refetchReactions(), refetchMeReact()]);
+    } catch {
+      showError("Failed to react.");
     } finally {
       setIsReacting(false);
     }
   };
 
-  const handleSubmitComment = async (commentText: string) => {
+  const handleComment = async (text: string) => {
     if (!post) return;
-    const res = await fetch("/api/blog/comment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ postId: post.id, content: commentText }),
-    });
+    const res = await fetch("/api/blog/comment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postId: post.id, content: text }) });
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data?.error || "Failed to comment. Please login and try again.");
+      const err = await res.json().catch(() => ({}));
+      alert(err?.error ?? "Failed to comment.");
       return;
     }
-    await refetchPost();
+    refetchPost();
   };
 
-  if (!post) return <BlogDetailSkeleton />;
+  if (!post) return null;
 
-  function getYoutubeIdFromUrl(url: string) {
-    if (!url) return '';
-    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/#\s]{11})/);
-    return match ? match[1] : '';
-  }
-
-  const REACTION_EMOJIS: Record<string, string> = {
-    LIKE: "👍",
-    HEART: "❤️",
-    HAHA: "😂",
-    WOW: "😮",
-    SAD: "😢",
-    ANGRY: "😠"
-  };
-
-  function flattenComments(comments: { id: string; text?: string; content?: string; createdAt?: string; userId?: string; user?: { wallet?: string; image?: string } | null; parentCommentId?: string | null; author?: string; avatar?: string; }[]): Comment[] {
-    return comments.map((c) => ({
-      id: c.id,
-      content: c.text ?? c.content ?? '',
-      createdAt: c.createdAt ?? '',
-      userId: c.userId ?? '',
-      user: c.user ?? null,
-      parentCommentId: c.parentCommentId !== undefined ? c.parentCommentId : null,
-      replies: [],
-      author: c.user?.wallet ?? c.author ?? '',
-      avatar: c.user?.image ?? c.avatar ?? '',
-    }));
-  }
-
-  function buildNestedComments(flatComments: Comment[], postId: string, authorId: string, authorWallet?: string) {
-    const commentMap = new Map<string, Comment & { replies: Comment[]; parentUserId?: string; parentAuthor?: string }>();
-    flatComments.forEach((c) => commentMap.set(c.id, { ...c, replies: [] }));
-    const rootComments: (Comment & { replies: Comment[]; parentUserId?: string; parentAuthor?: string })[] = [];
-    function getDepth(c: Comment & { parentCommentId?: string | null }): number {
-      let depth = 1;
-      let cur = c;
-      while (cur.parentCommentId) {
-        const parent = commentMap.get(cur.parentCommentId);
-        if (!parent) break;
-        depth++;
-        cur = parent;
-      }
-      return depth;
-    }
-    flatComments.forEach((c) => {
-      if (!c.replies) c.replies = [];
-      if (!c.author) c.author = '';
-      if (!c.createdAt) c.createdAt = '';
-      if (c.parentCommentId) {
-        let parent = commentMap.get(c.parentCommentId);
-        const depth = getDepth(c);
-        if (depth > 3) {
-          let cur = c;
-          let d = depth;
-          while (d > 3 && cur.parentCommentId) {
-            cur = commentMap.get(cur.parentCommentId)!;
-            d--;
-          }
-          if (!cur.replies) cur.replies = [];
-          parent = { ...cur, replies: cur.replies ?? [] };
-        }
-        if (parent) {
-          commentMap.get(c.id)!.parentUserId = parent.userId;
-          commentMap.get(c.id)!.parentAuthor = parent.user?.wallet || parent.author || '';
-          if (!parent.replies) parent.replies = [];
-          parent.replies.push(commentMap.get(c.id)!);
-        }
-      } else {
-        rootComments.push(commentMap.get(c.id)!);
-      }
-    });
-    rootComments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    function mapComment(c: Comment & { replies?: Comment[]; parentUserId?: string; parentAuthor?: string }): Comment {
-      const isPostAuthor = !!(c.userId && authorId && c.userId === authorId);
-      return {
-        id: c.id,
-        userId: c.userId,
-        author: isPostAuthor ? (authorWallet || c.user?.displayName || c.user?.wallet || c.author || '') : (c.user?.displayName || c.user?.wallet || c.author || ''),
-        content: c.content ?? '',
-        createdAt: c.createdAt ?? '',
-        time: c.time ?? c.createdAt ?? '',
-        avatar: c.avatar ?? '',
-        replies: (c.replies ?? []).map(mapComment), 
-        parentCommentId: c.parentCommentId,
-        parentUserId: c.parentUserId,
-        parentAuthor: c.parentAuthor,
-        isPostAuthor,
-      };
-    }
-    return rootComments.map(mapComment);
-  }
+  const media = post.media?.[0];
+  const isYt = media?.type === "YOUTUBE";
+  const likeCount = Object.values(reactions).reduce((a, b) => a + b, 0);
+  const nestedComments = toNested(toFlat(post.comments ?? []), post.authorId ?? "", post.authorWallet);
 
   return (
     <main className="relative min-h-screen bg-white dark:bg-gray-950 scrollbar-hide">
       <BackgroundMotion />
+      <div className="fixed inset-0 z-[1] pointer-events-none bg-gray-100/80 dark:bg-gray-950/85" aria-hidden />
       <Header />
       <div className="pt-20">
-        <div className="mx-auto max-w-7xl px-6 pb-20 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Main Content */}
-            <article className="lg:col-span-3">
-              <div className="mb-8">
-                <Link
-                  href="/blog"
-                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Blog
-                </Link>
-              </div>
-          <header className="mb-12">
-            <div className="mb-6">
-              <time className="text-sm text-gray-600 dark:text-gray-400">
-                {new Date(post.createdAt).toLocaleString("en-GB", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
-              </time>
-              <span className="mx-2 text-gray-500 dark:text-gray-500">•</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">by {post.author || 'Admin'}</span>
-              {post.updatedAt && post.updatedAt !== post.createdAt && (
-                <>
-                  <span className="mx-2 text-gray-500 dark:text-gray-500">•</span>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Updated: {new Date(post.updatedAt).toLocaleString("en-GB", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
-                  </span>
-                </>
-              )}
-            </div>
-            <h1 className="mb-8 text-3xl font-bold text-gray-900 dark:text-white leading-tight break-words lg:text-5xl xl:text-6xl">
-              {post.title}
-            </h1>
-            {Array.isArray(post.tags) && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {post.tags.map((tag: BlogTag | string, index: number) => {
-                  const tagName = typeof tag === 'string' ? tag : (tag?.name || '');
-                  const tagId = typeof tag === 'string' ? tag : (tag?.id || index.toString());
-                  
-                  if (!tagName) return null;
-                  
-                  return (
-                    <span 
-                      key={tagId}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                    >
-                      {tagName}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-          </header>
-          
-          <div className="mb-12">
-            <div className="relative h-64 w-full overflow-hidden rounded-lg sm:h-80 lg:h-96">
-              {post.media && post.media.length > 0 ? (
-                post.media[0].type === 'YOUTUBE' ? (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${post.media[0].id || getYoutubeIdFromUrl(post.media[0].url)}`}
-                    title={post.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                  />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pb-20 lg:px-8">
+          <article className="min-w-0 max-w-4xl mx-auto">
+            <Link href="/blog" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm mb-6">
+              <ArrowLeft className="w-4 h-4" /> Trở lại trang blog
+            </Link>
+            <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white break-words sm:text-3xl lg:text-4xl">{post.title}</h1>
+            <time className="block text-sm text-gray-600 dark:text-gray-400 mb-6">{formatDate(post.createdAt)}</time>
+
+            <div className="mb-8 relative h-64 w-full overflow-hidden rounded-lg sm:h-80 lg:h-96">
+              {media ? (
+                isYt ? (
+                  <iframe src={`https://www.youtube.com/embed/${media.id || ytId(media.url)}`} title={post.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full" />
                 ) : (
-                  <img
-                    src={post.media[0].url}
-                    alt={post.title}
-                    className="object-cover w-full h-full"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
+                  <img src={media.url} alt={post.title} className="object-cover w-full h-full" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }} />
                 )
               ) : (
-                <img
-                  src="/images/common/loading.png"
-                  alt={post.title}
-                  className="object-cover w-full h-full"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
+                <img src="/images/common/loading.png" alt={post.title} className="object-cover w-full h-full" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }} />
               )}
-              <div className="hidden w-full h-full bg-gray-100 flex items-center justify-center">
-                <span className="text-gray-400">Image not available</span>
-              </div>
+              <div className="hidden w-full h-full bg-gray-100 flex items-center justify-center"><span className="text-gray-400">Image not available</span></div>
             </div>
-          </div>
-          
-          <div>
-            <TipTapPreview content={post.content} />
-          </div>
 
-          <div className="mt-6 text-gray-500 dark:text-gray-400">
-            {hasSeen && <span className="italic mr-3">Seen</span>}
-            {typeof totalViews === 'number' && (
-              <span className="inline-flex items-center gap-1">
-                <span className="h-1 w-1 rounded-full bg-gray-400 inline-block align-middle" />
-                <span>Views: {totalViews}</span>
-              </span>
-            )}
-          </div>
+            <div ref={proseRef}><TipTapPreview content={post.content} /></div>
 
-          {post.githubRepo && (
-            <div className="my-8 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-              <div className="text-center">
+            <div className="mt-8 text-right text-sm text-gray-600 dark:text-gray-400">
+              Tác giả: <span className="font-semibold text-gray-900 dark:text-white">{post.author || "Admin"}</span>
+            </div>
+
+            {post.githubRepo && (
+              <div className="my-8 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
                 <div className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Support the project on GitHub</div>
-                <div className="text-gray-600 dark:text-gray-400 mb-6">
-                  If you find <strong>{post.githubRepo.includes('http') ? post.githubRepo.split('/').pop() : post.githubRepo.split('/')[1]}</strong> useful, please click the ⭐ button to support!
-                </div>
-                <a
-                  href={post.githubRepo.startsWith('http') ? post.githubRepo : `https://github.com/${post.githubRepo}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" />
-                  </svg>
+                <div className="text-gray-600 dark:text-gray-400 mb-6">If you find <strong>{post.githubRepo.includes("http") ? post.githubRepo.split("/").pop() : post.githubRepo.split("/")[1]}</strong> useful, please click ⭐ to support!</div>
+                <a href={post.githubRepo.startsWith("http") ? post.githubRepo : `https://github.com/${post.githubRepo}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800">
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" /></svg>
                   Star on GitHub
                 </a>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="mt-12 border-t border-gray-200 dark:border-gray-700 pt-8">
-            <div className="mb-6 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-              <ReactionCount 
-                reactions={reactions}
-              />
-              <div className="flex items-center gap-4">
-                <span>{post.comments?.length || 0} comments</span>
-              </div>
-            </div>
-            <div className="flex items-center border-t border-gray-200 dark:border-gray-700 pt-4">
-              <div 
-                className="relative flex flex-1 items-center justify-center"
-                onMouseEnter={() => setShowReactions(true)}
-                onMouseLeave={() => setShowReactions(false)}
-              >
-                <button 
-                  onClick={() => handleReact('LIKE')}
-                  disabled={isReacting}
-                  className={`flex items-center justify-center gap-2 py-3 text-gray-600 dark:text-gray-400 transition-colors w-full ${currentUserReaction ? 'text-blue-600 dark:text-blue-400' : 'hover:text-blue-600 dark:hover:text-blue-400'} ${isReacting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <span className={`flex items-center justify-center ${currentUserReaction ? 'scale-110' : 'hover:scale-110'}`} style={{ minWidth: 28, minHeight: 28 }}>
-                    {currentUserReaction ? (
-                      <Image src={REACTION_ICONS[currentUserReaction]} alt={currentUserReaction} width={24} height={24} className="w-6 h-6" />
-                    ) : (
-                      <ThumbsUp className="h-5 w-5" />
-                    )}
-                  </span>
-                  <span className={`font-medium ml-1 ${currentUserReaction ? 'text-blue-600 dark:text-blue-400' : ''}`} style={{ lineHeight: '28px', fontSize: '18px' }}>
-                    {currentUserReaction ? currentUserReaction.charAt(0) + currentUserReaction.slice(1).toLowerCase() : 'Like'}
-                  </span>
+            <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-gray-200 dark:border-gray-700 pt-6">
+              <div className="relative" ref={reactionWrapRef}>
+                <button type="button" onClick={() => setShowReactions((v) => !v)} disabled={isReacting} className={blueBtn}>
+                  {currentUserReaction ? <Image src={REACTION_ICONS[currentUserReaction]} alt="" width={18} height={18} className="w-[18px] h-[18px]" /> : <ThumbsUp className="w-4 h-4" />}
+                  <span>Thích {likeCount}</span>
                 </button>
-                <AnimatePresence>
-                  {showReactions && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 z-50 p-1"
-                    >
-                    <div className="flex items-center gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-full px-6 py-4 shadow-2xl">
-                      {[
-                        { image: "/images/reaction/like.png", label: "Like", color: "bg-blue-500", type: "LIKE" },
-                        { image: "/images/reaction/tym.png", label: "Love", color: "bg-red-500", type: "HEART" },
-                        { image: "/images/reaction/haha.png", label: "Haha", color: "bg-yellow-500", type: "HAHA" },
-                        { image: "/images/reaction/wow.png", label: "Wow", color: "bg-yellow-500", type: "WOW" },
-                        { image: "/images/reaction/sad.png", label: "Sad", color: "bg-yellow-500", type: "SAD" },
-                        { image: "/images/reaction/angry.png", label: "Angry", color: "bg-red-500", type: "ANGRY" },
-                      ].map((reaction, index) => (
-                        <motion.button
-                          key={index}
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: index * 0.05, duration: 0.2 }}
-                          whileHover={{ scale: isReacting ? 1 : 1.4 }}
-                          whileTap={{ scale: isReacting ? 1 : 0.9 }}
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            if (!isReacting) {
-                              await handleReact(reaction.type);
-                              setShowReactions(false);
-                            }
-                          }}
-                          disabled={isReacting}
-                          className={`w-14 h-14 rounded-full bg-transparent hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-all duration-200 flex items-center justify-center text-gray-900 dark:text-gray-100 text-3xl group relative overflow-hidden ${currentUserReaction === reaction.type ? 'ring-4 ring-blue-400 scale-110' : 'hover:scale-150'} ${isReacting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          aria-label={reaction.label}
-                        >
-                          <div className="group-hover:scale-110 transition-transform duration-200">
-                            <Image
-                              src={reaction.image}
-                              alt={reaction.label}
-                              width={32}
-                              height={32}
-                              className="w-8 h-8"
-                            />
-                          </div>
-                          <div className="absolute inset-0 bg-gray-100/5 dark:bg-gray-700/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full"></div>
-                        </motion.button>
+                {showReactions && (
+                  <div className="absolute bottom-full left-0 mb-1 z-50 p-1">
+                    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2">
+                      {REACTIONS.map((r) => (
+                        <button key={r.type} type="button" onClick={() => { handleReact(r.type); setShowReactions(false); }} disabled={isReacting} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <Image src={r.image} alt={r.type} width={24} height={24} />
+                        </button>
                       ))}
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-                </AnimatePresence>
               </div>
-              
-              <button 
-                className="flex flex-1 items-center justify-center gap-2 py-3 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors group"
-                onClick={() => setShowAllComments((v) => !v)}
-              >
-                <MessageCircle className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                <span className="font-medium">Comment</span>
-              </button>
-              <button 
-                className="flex flex-1 items-center justify-center gap-2 py-3 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group"
-                onClick={() => flushSync(() => setShowShareModal(true))}
-              >
-                <Share2 className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                <span className="font-medium">Share</span>
+              <button type="button" onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`, "_blank", "noopener,noreferrer,width=600,height=400")} className={blueBtn}>
+                <Share2 className="w-4 h-4" /> Chia sẻ
               </button>
             </div>
-            <div>
-              <CommentSection 
-                comments={buildNestedComments(flattenComments(post.comments || []), post.id, post.authorId || '', post.authorWallet)}
-                postId={post.id}
-                onSubmitComment={handleSubmitComment}
-                showAllComments={showAllComments}
-              />
+
+            <OlderNewsList posts={relatedPosts.map((p: { id: string; title: string; slug?: string; createdAt: string }) => ({ id: p.id, title: p.title, slug: p.slug ?? p.id, createdAt: p.createdAt }))} />
+
+            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <CommentSection comments={nestedComments} postId={post.id} onSubmitComment={handleComment} showAllComments={showAllComments} />
             </div>
-          </div>
 
-              <RelatedPostsSlider posts={relatedPosts} />
-
-              <footer className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Published on {new Date(post.createdAt).toLocaleString("en-GB", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
-              </div>
-              <Link
-                href="/blog"
-                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-              >
-                ← Back to all posts
-              </Link>
-            </div>
-          </footer>
-            </article>
-
-            {/* Sidebar */}
-            <aside className="lg:col-span-1">
-              <div className="sticky top-24 space-y-6">
-                <LatestPostsSidebar currentPostSlug={slug} />
-                <ServiceAdCard 
-                  onDelegateService={() => {
-                    window.location.href = '/our-service';
-                  }}
-                />
-              </div>
-            </aside>
-          </div>
+          </article>
         </div>
       </div>
-      <ShareModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        blogTitle={post.title}
-        blogUrl={typeof window !== 'undefined' ? window.location.href : ''}
-      />
     </main>
   );
-} 
+}

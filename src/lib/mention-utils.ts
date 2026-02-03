@@ -86,21 +86,12 @@ export function formatMentionsForStorage(
 
 export function calculateMentionPosition(
   inputElement: HTMLInputElement,
-  cursorPosition: number,
-  text: string
+  _cursorPosition: number,
+  _text: string
 ): { x: number; y: number } {
-  const textBeforeMention = text.substring(0, text.lastIndexOf('@', cursorPosition));
-  const tempSpan = document.createElement('span');
-  tempSpan.style.font = window.getComputedStyle(inputElement).font;
-  tempSpan.style.visibility = 'hidden';
-  tempSpan.style.position = 'absolute';
-  tempSpan.style.whiteSpace = 'pre';
-  tempSpan.textContent = textBeforeMention;
-  document.body.appendChild(tempSpan);
-  document.body.removeChild(tempSpan);
-  
+  const rect = inputElement.getBoundingClientRect();
   return {
-    x: 0, 
-    y: inputElement.offsetHeight + 5
+    x: rect.left,
+    y: rect.bottom + 4,
   };
 }
