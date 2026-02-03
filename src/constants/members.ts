@@ -76,6 +76,7 @@ export interface MemberType {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  tab?: Tab;
 }
 
 export interface MemberModalProps {
