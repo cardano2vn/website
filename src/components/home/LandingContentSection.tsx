@@ -37,19 +37,19 @@ export default function LandingContentSection({ content }: LandingContentSection
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-2xl bg-white/80 dark:bg-slate-950/70 backdrop-blur-sm px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10 transition-colors">
       {content.title ? (
         <h1 className={`mb-4 lg:mb-6 font-bold text-gray-900 dark:text-white ${titleSize}`}>
           {content.title}
         </h1>
       ) : null}
       {content.description ? (
-        <div className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
+        <div className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
           <TipTapPreview content={content.description} />
         </div>
       ) : null}
       {content.mainText ? (
-        <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+        <div className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
           <TipTapPreview content={content.mainText} />
         </div>
       ) : null}
