@@ -8,7 +8,7 @@ const config: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["lucid-cardano"],
   experimental: {
-    optimizePackageImports: ["@prisma/client", "@tanstack/react-query", "lucide-react", "framer-motion"],
+    optimizePackageImports: ["@tanstack/react-query", "lucide-react", "framer-motion"],
   },
   webpack: (config, { isServer }) => {
     config.experiments = { ...config.experiments, topLevelAwait: true };
