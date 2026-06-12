@@ -113,71 +113,61 @@ export default function LandingSection() {
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-[calc(100vh-5rem)]">
           <div className="relative flex items-center bg-white dark:bg-gray-950 px-6 sm:px-10 lg:px-14 xl:px-18">
-            <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent hidden lg:block" />
             <div className="max-w-xl w-full py-12 lg:py-0">
-              {formData.subtitle ? (
-                <div className="inline-flex items-center gap-2 rounded-lg border border-blue-200/60 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/50 px-3 py-1 text-sm font-medium text-blue-700 dark:text-blue-300 mb-6">
-                  {formData.subtitle}
-                </div>
-              ) : null}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-1 h-6 bg-blue-500 rounded-full" />
+                {formData.subtitle ? (
+                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                    {formData.subtitle}
+                  </span>
+                ) : (
+                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                    WELCOME
+                  </span>
+                )}
+              </div>
               {formData.title ? (
-                <h1 className={`font-bold text-gray-900 dark:text-white ${titleSize} leading-[1.1] tracking-tight`}>
+                <h1 className={`font-bold text-gray-900 dark:text-white ${titleSize} leading-[1.15] tracking-tight`}>
                   {formData.title}
                 </h1>
               ) : null}
               {formData.description ? (
-                <div className="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-400 leading-relaxed">
+                <div className="mt-6 text-base sm:text-lg text-gray-500 dark:text-gray-400 leading-relaxed">
                   <TipTapPreview content={formData.description} />
                 </div>
               ) : null}
               <div className="flex flex-col sm:flex-row gap-3 mt-8 lg:mt-10">
                 <Link
                   href={routers.service}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-white shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 text-base lg:text-lg transition-colors"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 px-6 lg:px-8 py-3 lg:py-3 font-semibold text-white shadow-md hover:bg-blue-700 dark:hover:bg-blue-600 text-sm lg:text-base transition-colors"
                 >
                   About Us
                 </Link>
                 <button
                   type="button"
                   onClick={scrollToContact}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-gray-900 dark:text-white shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm lg:text-base transition-colors"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 lg:px-8 py-3 lg:py-3 font-semibold text-gray-900 dark:text-white shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 text-sm lg:text-base transition-colors"
                   aria-label="Register our course"
                 >
                   Register our course
                 </button>
               </div>
               {formData.mainText ? (
-                <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 text-sm text-gray-500 dark:text-gray-500 leading-relaxed">
+                <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 text-sm text-gray-400 dark:text-gray-500 leading-relaxed">
                   <TipTapPreview content={formData.mainText} />
                 </div>
               ) : null}
             </div>
           </div>
-          <div className="relative hidden lg:flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-900/80">
-            <div className="absolute inset-0 bg-[radial-gradient(#d1d5db_0.5px,transparent_0.5px)] dark:bg-[radial-gradient(#374151_0.5px,transparent_0.5px)] bg-[length:24px_24px]" />
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-200/40 dark:via-blue-800/40 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-200/40 dark:via-blue-800/40 to-transparent" />
-            <svg className="absolute -top-20 -right-20 w-64 h-64 text-blue-500/[0.03] dark:text-blue-400/[0.03]" viewBox="0 0 200 200" fill="none">
-              <circle cx="100" cy="100" r="80" stroke="currentColor" strokeWidth="0.5" />
-              <circle cx="100" cy="100" r="50" stroke="currentColor" strokeWidth="0.5" />
-              <circle cx="100" cy="100" r="20" stroke="currentColor" strokeWidth="0.5" />
-              <line x1="20" y1="100" x2="180" y2="100" stroke="currentColor" strokeWidth="0.3" />
-              <line x1="100" y1="20" x2="100" y2="180" stroke="currentColor" strokeWidth="0.3" />
-            </svg>
-            <svg className="absolute -bottom-16 -left-16 w-48 h-48 text-blue-500/[0.03] dark:text-blue-400/[0.03]" viewBox="0 0 200 200" fill="none">
-              <rect x="20" y="20" width="160" height="160" rx="10" stroke="currentColor" strokeWidth="0.5" />
-              <rect x="40" y="40" width="120" height="120" rx="6" stroke="currentColor" strokeWidth="0.5" />
-            </svg>
-            <div className="relative w-[80%] max-w-lg">
-              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-b from-blue-200/20 via-transparent to-blue-200/10 dark:from-blue-800/20 dark:to-blue-800/10 blur-sm" />
-              <div className="relative rounded-2xl overflow-hidden border border-gray-200/60 dark:border-gray-700/60 shadow-2xl bg-white dark:bg-gray-800">
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400/40 via-blue-500/40 to-blue-400/40 dark:from-blue-500/40 dark:via-blue-400/40 dark:to-blue-500/40" />
+          <div className="relative hidden lg:flex items-center justify-center bg-gray-50 dark:bg-gray-900/50">
+            <div className="relative w-4/5 max-w-lg">
+              <div className="rounded-xl overflow-hidden shadow-xl bg-white dark:bg-gray-800 ring-1 ring-gray-200/60 dark:ring-gray-700/60">
                 {currentSlide && (
                   <img
                     key={currentSlide.url}
                     src={currentSlide.url}
                     alt={currentSlide.title}
-                    className="w-full aspect-[4/3] object-cover animate-in fade-in duration-500 cursor-zoom-in"
+                    className="w-full aspect-[16/11] object-cover animate-in fade-in duration-500 cursor-zoom-in"
                     onClick={() => setLightboxImage(currentSlide)}
                     role="button"
                     tabIndex={0}
@@ -186,18 +176,15 @@ export default function LandingSection() {
                   />
                 )}
               </div>
-              <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-blue-400/30 dark:bg-blue-500/30" />
-              <div className="absolute -bottom-1 left-1/3 w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
             </div>
           </div>
           <div className="relative h-[50vh] lg:hidden overflow-hidden bg-gray-100 dark:bg-gray-900">
-            <div className="absolute inset-0 bg-[radial-gradient(#d1d5db_0.5px,transparent_0.5px)] dark:bg-[radial-gradient(#374151_0.5px,transparent_0.5px)] bg-[length:20px_20px]" />
             {currentSlide && (
               <img
                 key={currentSlide.url}
                 src={currentSlide.url}
                 alt={currentSlide.title}
-                className="w-full h-full object-cover animate-in fade-in duration-500 cursor-zoom-in"
+                className="w-full h-full object-cover animate-in fade-in duration-500"
                 onClick={() => setLightboxImage(currentSlide)}
                 role="button"
                 tabIndex={0}
