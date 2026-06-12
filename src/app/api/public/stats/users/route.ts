@@ -4,7 +4,7 @@ import { prisma } from '~/lib/prisma';
 import { createSuccessResponse, createErrorResponse } from '~/lib/api-response';
 
 const CACHE_REVALIDATE = 120;
-const FAKE_BASE_USERS = 6437;
+const FAKE_BASE_USERS = 3722;
 
 export const GET = async () => {
   try {

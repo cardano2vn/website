@@ -3,7 +3,7 @@ import { prisma } from '~/lib/prisma';
 import { createSuccessResponse, createErrorResponse } from '~/lib/api-response';
 
 const NEXT_PUBLIC_WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:4001';
-const FAKE_BASE_USERS = 6437;
+const FAKE_BASE_USERS = 3722;
 
 export const revalidate = 0;
 

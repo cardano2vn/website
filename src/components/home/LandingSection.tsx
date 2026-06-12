@@ -112,10 +112,11 @@ export default function LandingSection() {
         className="relative border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-hidden"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-[calc(100vh-5rem)]">
-          <div className="flex items-center bg-white dark:bg-gray-950 px-6 sm:px-10 lg:px-14 xl:px-18">
+          <div className="relative flex items-center bg-white dark:bg-gray-950 px-6 sm:px-10 lg:px-14 xl:px-18">
+            <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent hidden lg:block" />
             <div className="max-w-xl w-full py-12 lg:py-0">
               {formData.subtitle ? (
-                <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 mb-6">
+                <div className="inline-flex items-center gap-2 rounded-lg border border-blue-200/60 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/50 px-3 py-1 text-sm font-medium text-blue-700 dark:text-blue-300 mb-6">
                   {formData.subtitle}
                 </div>
               ) : null}
@@ -152,20 +153,31 @@ export default function LandingSection() {
               ) : null}
             </div>
           </div>
-          <div className="relative hidden lg:flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 overflow-hidden">
-            <div className="relative w-[90%] max-w-lg">
-              <div className="rounded-2xl overflow-hidden border border-gray-200/60 dark:border-gray-700/60 shadow-2xl bg-white dark:bg-gray-800">
-                <div className="flex items-center gap-1.5 px-4 h-9 bg-gray-100 dark:bg-gray-800 border-b border-gray-200/60 dark:border-gray-700/60">
-                  <span className="w-3 h-3 rounded-full bg-red-400" />
-                  <span className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <span className="w-3 h-3 rounded-full bg-green-400" />
-                </div>
+          <div className="relative hidden lg:flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-900/80">
+            <div className="absolute inset-0 bg-[radial-gradient(#d1d5db_0.5px,transparent_0.5px)] dark:bg-[radial-gradient(#374151_0.5px,transparent_0.5px)] bg-[length:24px_24px]" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-200/40 dark:via-blue-800/40 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-200/40 dark:via-blue-800/40 to-transparent" />
+            <svg className="absolute -top-20 -right-20 w-64 h-64 text-blue-500/[0.03] dark:text-blue-400/[0.03]" viewBox="0 0 200 200" fill="none">
+              <circle cx="100" cy="100" r="80" stroke="currentColor" strokeWidth="0.5" />
+              <circle cx="100" cy="100" r="50" stroke="currentColor" strokeWidth="0.5" />
+              <circle cx="100" cy="100" r="20" stroke="currentColor" strokeWidth="0.5" />
+              <line x1="20" y1="100" x2="180" y2="100" stroke="currentColor" strokeWidth="0.3" />
+              <line x1="100" y1="20" x2="100" y2="180" stroke="currentColor" strokeWidth="0.3" />
+            </svg>
+            <svg className="absolute -bottom-16 -left-16 w-48 h-48 text-blue-500/[0.03] dark:text-blue-400/[0.03]" viewBox="0 0 200 200" fill="none">
+              <rect x="20" y="20" width="160" height="160" rx="10" stroke="currentColor" strokeWidth="0.5" />
+              <rect x="40" y="40" width="120" height="120" rx="6" stroke="currentColor" strokeWidth="0.5" />
+            </svg>
+            <div className="relative w-[80%] max-w-lg">
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-b from-blue-200/20 via-transparent to-blue-200/10 dark:from-blue-800/20 dark:to-blue-800/10 blur-sm" />
+              <div className="relative rounded-2xl overflow-hidden border border-gray-200/60 dark:border-gray-700/60 shadow-2xl bg-white dark:bg-gray-800">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400/40 via-blue-500/40 to-blue-400/40 dark:from-blue-500/40 dark:via-blue-400/40 dark:to-blue-500/40" />
                 {currentSlide && (
                   <img
                     key={currentSlide.url}
                     src={currentSlide.url}
                     alt={currentSlide.title}
-                    className="w-full aspect-[16/10] object-cover animate-in fade-in duration-500 cursor-zoom-in"
+                    className="w-full aspect-[4/3] object-cover animate-in fade-in duration-500 cursor-zoom-in"
                     onClick={() => setLightboxImage(currentSlide)}
                     role="button"
                     tabIndex={0}
@@ -174,11 +186,12 @@ export default function LandingSection() {
                   />
                 )}
               </div>
+              <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-blue-400/30 dark:bg-blue-500/30" />
+              <div className="absolute -bottom-1 left-1/3 w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
             </div>
-            <div className="absolute -bottom-6 -right-6 w-48 h-48 rounded-full bg-blue-500/5 dark:bg-blue-400/5 blur-3xl pointer-events-none" />
-            <div className="absolute -top-6 -left-6 w-36 h-36 rounded-full bg-gray-500/5 dark:bg-gray-400/5 blur-3xl pointer-events-none" />
           </div>
           <div className="relative h-[50vh] lg:hidden overflow-hidden bg-gray-100 dark:bg-gray-900">
+            <div className="absolute inset-0 bg-[radial-gradient(#d1d5db_0.5px,transparent_0.5px)] dark:bg-[radial-gradient(#374151_0.5px,transparent_0.5px)] bg-[length:20px_20px]" />
             {currentSlide && (
               <img
                 key={currentSlide.url}
