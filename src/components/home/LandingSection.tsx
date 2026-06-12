@@ -98,38 +98,76 @@ export default function LandingSection() {
     }
   };
 
-  const totalLength =
-    formData.title.length +
-    formData.subtitle.length +
-    formData.description.length +
-    formData.mainText.length;
   const titleSize =
-    totalLength > 500
-      ? "text-3xl lg:text-5xl xl:text-6xl"
-      : totalLength > 300
-        ? "text-4xl lg:text-6xl xl:text-7xl"
-        : "text-5xl lg:text-7xl xl:text-8xl";
+    formData.title.length > 50
+      ? "text-3xl lg:text-5xl"
+      : formData.title.length > 30
+        ? "text-4xl lg:text-6xl"
+        : "text-5xl lg:text-7xl";
 
   return (
     <>
       <section
         id="Landing"
-        className="relative flex min-h-[80vh] items-center border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-x-hidden"
+        className="relative border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-hidden"
       >
-        <div className="absolute left-[10%] right-0 top-0 bottom-[20%] z-0 overflow-hidden rounded-bl-3xl">
-          {currentSlide && (
-            <img
-              key={currentSlide.url}
-              src={currentSlide.url}
-              alt={currentSlide.title}
-              className="w-full h-full object-cover animate-in fade-in duration-500 cursor-zoom-in"
-              onClick={() => setLightboxImage(currentSlide)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && setLightboxImage(currentSlide)}
-              aria-label="View image"
-            />
-          )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-[80vh]">
+          <div className="flex items-center bg-white dark:bg-gray-950 px-6 sm:px-10 lg:px-16 xl:px-20 py-20 sm:py-24 lg:py-28">
+            <div className="max-w-xl">
+              {formData.subtitle ? (
+                <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 mb-6">
+                  {formData.subtitle}
+                </div>
+              ) : null}
+              {formData.title ? (
+                <h1 className={`font-bold text-gray-900 dark:text-white ${titleSize} leading-[1.1] tracking-tight`}>
+                  {formData.title}
+                </h1>
+              ) : null}
+              {formData.description ? (
+                <div className="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-400 leading-relaxed">
+                  <TipTapPreview content={formData.description} />
+                </div>
+              ) : null}
+              <div className="flex flex-col sm:flex-row gap-3 mt-8 lg:mt-10">
+                <Link
+                  href={routers.service}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-white shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 text-base lg:text-lg transition-colors"
+                >
+                  About Us
+                </Link>
+                <button
+                  type="button"
+                  onClick={scrollToContact}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-gray-900 dark:text-white shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm lg:text-base transition-colors"
+                  aria-label="Register our course"
+                >
+                  Register our course
+                </button>
+              </div>
+              {formData.mainText ? (
+                <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 text-sm text-gray-500 dark:text-gray-500 leading-relaxed">
+                  <TipTapPreview content={formData.mainText} />
+                </div>
+              ) : null}
+            </div>
+          </div>
+          <div className="relative h-[50vh] lg:h-auto flex items-center bg-gray-50 dark:bg-gray-900">
+            {currentSlide && (
+              <img
+                key={currentSlide.url}
+                src={currentSlide.url}
+                alt={currentSlide.title}
+                className="w-full h-full object-cover animate-in fade-in duration-500 cursor-zoom-in lg:rounded-l-2xl lg:py-8 lg:pr-8"
+                style={{ maxHeight: "100%" }}
+                onClick={() => setLightboxImage(currentSlide)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && setLightboxImage(currentSlide)}
+                aria-label="View image"
+              />
+            )}
+          </div>
         </div>
         <ImageModal
           isOpen={!!lightboxImage}
@@ -137,48 +175,6 @@ export default function LandingSection() {
           imageUrl={lightboxImage?.url ?? ""}
           alt={lightboxImage?.title ?? ""}
         />
-        <div className="relative z-10 w-full min-w-0 pl-4 pr-4 pt-4 pb-12 sm:pl-6 sm:pt-6 lg:pl-8 lg:pt-8 lg:pb-20 pointer-events-none">
-          <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:grid-cols-2 lg:gap-16 items-center min-w-0">
-            <div className="relative max-w-2xl pointer-events-auto">
-              <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-gray-900/95 shadow-xl backdrop-blur-sm p-6 sm:p-8 lg:p-10 space-y-6">
-                {formData.title ? (
-                  <h1
-                    className={`mb-4 lg:mb-6 font-bold text-gray-900 dark:text-white ${titleSize} text-justify`}
-                  >
-                    {formData.title}
-                  </h1>
-                ) : null}
-                {formData.description ? (
-                  <div className="text-gray-700 dark:text-gray-300 text-base leading-relaxed text-justify">
-                    <TipTapPreview content={formData.description} />
-                  </div>
-                ) : null}
-                {formData.mainText ? (
-                  <div className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                    <TipTapPreview content={formData.mainText} />
-                  </div>
-                ) : null}
-                <div className="flex flex-col sm:flex-row gap-4 mt-6 lg:mt-8">
-                  <Link
-                    href={routers.service}
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 dark:bg-blue-500 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-white shadow-xl hover:bg-blue-700 dark:hover:bg-blue-600 text-base lg:text-lg transition-colors"
-                  >
-                    About Us
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={scrollToContact}
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-lg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 lg:px-8 py-3 lg:py-4 font-semibold text-gray-900 dark:text-white shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm lg:text-base transition-colors"
-                    aria-label="Register our course"
-                  >
-                    Register our course
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="hidden lg:block" aria-hidden />
-          </div>
-        </div>
       </section>
       <FloatingNotification />
     </>

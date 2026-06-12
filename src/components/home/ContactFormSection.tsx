@@ -416,7 +416,7 @@ export default function ContactFormSection() {
                   <img
                     src={selectedCourseImage}
                     alt="Course background"
-                    className="w-full h-full object-cover rounded-lg opacity-80 cursor-zoom-in"
+                    className="w-full h-full object-cover rounded-lg cursor-zoom-in"
                     onClick={() => setIsLightboxOpen(true)}
                   />
                   <ImageModal
