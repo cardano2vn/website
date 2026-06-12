@@ -56,11 +56,11 @@ function computeFakeOnline(realOnline: number, realTotal: number): number {
   const ratio = realTotal > 0 ? realOnline / realTotal : 0;
   let min: number, max: number;
   if (ratio >= 0.07) {
-    min = Math.max(50, Math.floor(base * 0.19));
-    max = Math.max(100, Math.floor(base * 0.23));
+    min = Math.max(50, Math.floor(base * 0.13));
+    max = Math.max(100, Math.floor(base * 0.18));
   } else {
-    min = Math.max(30, Math.floor(base * 0.08));
-    max = Math.max(100, Math.floor(base * 0.23));
+    min = Math.max(20, Math.floor(base * 0.02));
+    max = Math.max(80, Math.floor(base * 0.08));
   }
   return getHourlyRandom(min, max);
 }
