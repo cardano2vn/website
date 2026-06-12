@@ -1,7 +1,5 @@
 "use client";
-// import Image from "next/image";
 import Link from "next/link";
-// import { images } from "~/public/images";
 import { ThemeToggle } from "./ui/theme-toggle";
 import StarIcon from "./ui/StarIcon";
 import Logo from "./ui/logo";
@@ -10,6 +8,7 @@ import { useEffect, useState } from "react";
 export default function Footer() {
   const [totalUsers, setTotalUsers] = useState<number>(0);
   const [onlineUsers, setOnlineUsers] = useState<number>(0);
+  const [isPeak, setIsPeak] = useState(false);
 
   useEffect(() => {
     let intervalId: any;
@@ -26,6 +25,7 @@ export default function Footer() {
         if (oRes.ok) {
           const oJson = await oRes.json();
           setOnlineUsers(oJson?.data?.total ?? 0);
+          setIsPeak(oJson?.data?.peak ?? false);
         }
       } catch {}
     };
@@ -133,11 +133,11 @@ export default function Footer() {
                 <span>© 2025 Cardano2VN. All rights reserved.</span>
                 <span>|</span>
                 <span className="text-gray-500">
-                  Online: <strong className="text-gray-700 dark:text-gray-200">{onlineUsers}</strong>
+                  Online: <strong className={`transition-colors ${isPeak ? 'text-red-500 dark:text-red-400' : 'text-gray-700 dark:text-gray-200'}`}>{onlineUsers}</strong>
                 </span>
                 <span className="text-gray-300">|</span>
                 <span className="text-gray-500">
-                  Total users: <strong className="text-gray-700 dark:text-gray-200">{totalUsers}</strong>
+                  Total users: <strong className="text-gray-700 dark:text-gray-200">{totalUsers.toLocaleString()}</strong>
                 </span>
               </div>
             </div>

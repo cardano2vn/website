@@ -3,15 +3,17 @@ import { unstable_cache } from 'next/cache';
 import { prisma } from '~/lib/prisma';
 import { createSuccessResponse, createErrorResponse } from '~/lib/api-response';
 
-const CACHE_REVALIDATE = 120; // 2 min
+const CACHE_REVALIDATE = 120;
+const FAKE_BASE_USERS = 6437;
 
 export const GET = async () => {
   try {
-    const total = await unstable_cache(
+    const realTotal = await unstable_cache(
       () => prisma.user.count(),
       ['public-stats-users'],
       { revalidate: CACHE_REVALIDATE, tags: ['stats-users'] }
     )();
+    const total = FAKE_BASE_USERS + realTotal;
     const res = NextResponse.json(createSuccessResponse({ total }));
     res.headers.set('Cache-Control', `public, s-maxage=${CACHE_REVALIDATE}, stale-while-revalidate=300`);
     return res;

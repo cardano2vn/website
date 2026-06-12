@@ -111,9 +111,9 @@ export default function LandingSection() {
         id="Landing"
         className="relative border-t border-gray-200 dark:border-white/10 scroll-mt-28 md:scroll-mt-40 w-full min-w-0 overflow-hidden"
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-[80vh]">
-          <div className="flex items-center bg-white dark:bg-gray-950 px-6 sm:px-10 lg:px-16 xl:px-20 py-20 sm:py-24 lg:py-28">
-            <div className="max-w-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-[calc(100vh-5rem)]">
+          <div className="flex items-center bg-white dark:bg-gray-950 px-6 sm:px-10 lg:px-14 xl:px-18">
+            <div className="max-w-xl w-full py-12 lg:py-0">
               {formData.subtitle ? (
                 <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 mb-6">
                   {formData.subtitle}
@@ -152,14 +152,39 @@ export default function LandingSection() {
               ) : null}
             </div>
           </div>
-          <div className="relative h-[50vh] lg:h-auto flex items-center bg-gray-50 dark:bg-gray-900">
+          <div className="relative hidden lg:flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 overflow-hidden">
+            <div className="relative w-[90%] max-w-lg">
+              <div className="rounded-2xl overflow-hidden border border-gray-200/60 dark:border-gray-700/60 shadow-2xl bg-white dark:bg-gray-800">
+                <div className="flex items-center gap-1.5 px-4 h-9 bg-gray-100 dark:bg-gray-800 border-b border-gray-200/60 dark:border-gray-700/60">
+                  <span className="w-3 h-3 rounded-full bg-red-400" />
+                  <span className="w-3 h-3 rounded-full bg-yellow-400" />
+                  <span className="w-3 h-3 rounded-full bg-green-400" />
+                </div>
+                {currentSlide && (
+                  <img
+                    key={currentSlide.url}
+                    src={currentSlide.url}
+                    alt={currentSlide.title}
+                    className="w-full aspect-[16/10] object-cover animate-in fade-in duration-500 cursor-zoom-in"
+                    onClick={() => setLightboxImage(currentSlide)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && setLightboxImage(currentSlide)}
+                    aria-label="View image"
+                  />
+                )}
+              </div>
+            </div>
+            <div className="absolute -bottom-6 -right-6 w-48 h-48 rounded-full bg-blue-500/5 dark:bg-blue-400/5 blur-3xl pointer-events-none" />
+            <div className="absolute -top-6 -left-6 w-36 h-36 rounded-full bg-gray-500/5 dark:bg-gray-400/5 blur-3xl pointer-events-none" />
+          </div>
+          <div className="relative h-[50vh] lg:hidden overflow-hidden bg-gray-100 dark:bg-gray-900">
             {currentSlide && (
               <img
                 key={currentSlide.url}
                 src={currentSlide.url}
                 alt={currentSlide.title}
-                className="w-full h-full object-cover animate-in fade-in duration-500 cursor-zoom-in lg:rounded-l-2xl lg:py-8 lg:pr-8"
-                style={{ maxHeight: "100%" }}
+                className="w-full h-full object-cover animate-in fade-in duration-500 cursor-zoom-in"
                 onClick={() => setLightboxImage(currentSlide)}
                 role="button"
                 tabIndex={0}
