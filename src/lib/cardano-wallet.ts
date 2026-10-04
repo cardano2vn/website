@@ -38,7 +38,7 @@ export class CardanoWalletProvider {
           const availableWallets = await BrowserWallet.getAvailableWallets();
           const normalizedName = availableWallets.find(w => w.name.toLowerCase() === matchedInjectedKey.toLowerCase())?.name || matchedInjectedKey;
 
-          this.wallet = await BrowserWallet.enable(normalizedName);
+          this.wallet = await BrowserWallet.enable(matchedInjectedKey);
           this.rawWallet = null;
           this.currentWalletName = normalizedName;
 

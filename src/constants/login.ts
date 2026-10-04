@@ -38,6 +38,7 @@ export const C2VN_WALLETS: Wallet[] = [
   { id: "yoroi", name: "Yoroi Wallet", logo: "Y", color: "bg-yellow-500" },
   { id: "gero", name: "Gero Wallet", logo: "G", color: "bg-blue-600" },
   { id: "nufi", name: "NuFi Wallet", logo: "N", color: "bg-indigo-600" },
+  { id: "1am", name: "1AM Wallet", logo: "1", color: "bg-black" },
   { id: "priority", name: "Priority Wallet", logo: "P", color: "bg-green-600" },
 ];
 

@@ -20,7 +20,7 @@ export default function WalletList({ wallets }: WalletListProps) {
   }, [error, showError]);
 
   const handleWalletClick = async (walletId: string) => {
-    if (walletId === "eternal" || walletId === "lace" || walletId === "yoroi" || walletId === "nufi" || walletId === "gero") {
+    if (walletId === "eternal" || walletId === "lace" || walletId === "yoroi" || walletId === "nufi" || walletId === "gero" || walletId === "1am") {
       if (isAuthenticated) {
         await disconnect();
         showSuccess("Logout Successful", "Your Cardano wallet has been disconnected successfully.");
@@ -74,6 +74,7 @@ export default function WalletList({ wallets }: WalletListProps) {
       yoroi: 'yoroi',
       nami: 'nami',
       nufi: 'nufi',
+      '1am': '1am',
       gero: 'gerowallet',
       typhon: 'typhoncip30',
       priority: 'priority',
@@ -89,7 +90,7 @@ export default function WalletList({ wallets }: WalletListProps) {
   };
 
   const isCardanoWalletId = (walletId: string) => {
-    return ["eternal", "lace", "yoroi", "nami", "nufi", "gero", "typhon", "priority"].includes(walletId);
+    return ["eternal", "lace", "yoroi", "nami", "nufi", "1am", "gero", "typhon", "priority"].includes(walletId);
   };
 
   return (
@@ -132,7 +133,7 @@ export default function WalletList({ wallets }: WalletListProps) {
                 </span>
               )}
               
-                             {wallet.id === "eternal" || wallet.id === "nami" || wallet.id === "typhon" || wallet.id === "lace" || wallet.id === "yoroi" || wallet.id === "gero" || wallet.id === "nufi" || wallet.id === "priority" ? (
+                             {wallet.id === "eternal" || wallet.id === "nami" || wallet.id === "typhon" || wallet.id === "lace" || wallet.id === "yoroi" || wallet.id === "gero" || wallet.id === "nufi" || wallet.id === "1am" || wallet.id === "priority" ? (
                 connectingWalletId === wallet.id ? (
                   <div className="w-8 h-8 flex items-center justify-center">
                     <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
